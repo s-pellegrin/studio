@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -92,10 +93,11 @@ export default function RootLayout({
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    <Link href={item.href} legacyBehavior passHref>
+                    <Link href={item.href}>
                       <SidebarMenuButton
                         tooltip={{ children: item.label, side: 'right', className: 'ml-1' }}
                         className="justify-start"
+                        asChild={false} // Ensure SidebarMenuButton renders its own button if Link doesn't pass down props
                       >
                         <item.icon className="h-5 w-5" />
                         <span>{item.label}</span>
@@ -106,10 +108,11 @@ export default function RootLayout({
               </SidebarMenu>
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/settings" legacyBehavior passHref>
+              <Link href="/settings">
                 <SidebarMenuButton 
                   tooltip={{ children: 'Settings', side: 'right', className: 'ml-1' }}
                   className="justify-start"
+                  asChild={false}
                 >
                   <Settings className="h-5 w-5" />
                   <span>Settings</span>
