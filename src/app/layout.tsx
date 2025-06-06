@@ -1,4 +1,5 @@
 
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -23,7 +24,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import {
-  ClientSidebarProvider, // Changed from SidebarProvider
+  SidebarProvider, // Ensure this is imported as SidebarProvider
   Sidebar,
   SidebarHeader,
   SidebarContent,
@@ -81,7 +82,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased min-h-screen bg-background')}>
-        <ClientSidebarProvider>
+        <SidebarProvider> {/* Using the main SidebarProvider */}
           <Sidebar variant="sidebar" collapsible="icon" className="border-r">
             <SidebarHeader className="p-4">
               <Link href="/" className="flex items-center gap-2">
@@ -97,7 +98,6 @@ export default function RootLayout({
                       <SidebarMenuButton
                         tooltip={{ children: item.label, side: 'right', className: 'ml-1' }}
                         className="justify-start"
-                        // asChild={false} // Removed, as false is the default for SidebarMenuButton's own asChild
                       >
                         <item.icon className="h-5 w-5" />
                         <span>{item.label}</span>
@@ -112,7 +112,6 @@ export default function RootLayout({
                 <SidebarMenuButton
                   tooltip={{ children: 'Settings', side: 'right', className: 'ml-1' }}
                   className="justify-start"
-                  // asChild={false} // Removed, as false is the default for SidebarMenuButton's own asChild
                 >
                   <Settings className="h-5 w-5" />
                   <span>Settings</span>
@@ -152,9 +151,11 @@ export default function RootLayout({
             </header>
             <main className="flex-1 p-4 sm:p-6">{children}</main>
           </SidebarInset>
-        </ClientSidebarProvider>
+        </SidebarProvider>
         <Toaster />
       </body>
     </html>
   );
 }
+
+    
