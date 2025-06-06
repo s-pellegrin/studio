@@ -93,11 +93,11 @@ export default function RootLayout({
               <SidebarMenu>
                 {navItems.map((item) => (
                   <SidebarMenuItem key={item.label}>
-                    <Link href={item.href}>
+                    <Link href={item.href} asChild>
                       <SidebarMenuButton
                         tooltip={{ children: item.label, side: 'right', className: 'ml-1' }}
                         className="justify-start"
-                        asChild={false} // Ensure SidebarMenuButton renders its own button if Link doesn't pass down props
+                        asChild={false}
                       >
                         <item.icon className="h-5 w-5" />
                         <span>{item.label}</span>
@@ -108,7 +108,7 @@ export default function RootLayout({
               </SidebarMenu>
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/settings">
+              <Link href="/settings" asChild>
                 <SidebarMenuButton 
                   tooltip={{ children: 'Settings', side: 'right', className: 'ml-1' }}
                   className="justify-start"
