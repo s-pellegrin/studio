@@ -540,29 +540,34 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+interface SidebarMenuButtonPropsInternal extends VariantProps<typeof sidebarMenuButtonVariants> {
+  children?: React.ReactNode;
+  className?: string;
+  isActive?: boolean;
+  // This prop determines if SidebarMenuButton itself should render a <Slot>
+  renderAsSlot?: boolean; 
+  // Allow other props like href, onClick, and crucially, asChild from Link
+  [key: string]: any; 
+}
+
 const SidebarMenuButton = React.forwardRef<
-  HTMLAnchorElement,
-  React.ComponentProps<'a'> & {
-    asChild?: boolean;
-    isActive?: boolean;
-    // Tooltip prop removed
-  } & VariantProps<typeof sidebarMenuButtonVariants>
+  HTMLAnchorElement, 
+  SidebarMenuButtonPropsInternal
 >(
   (
     {
-      asChild: ownAsChild = false,
+      renderAsSlot = false,
       isActive = false,
       variant = "default",
       size = "default",
       className,
       children,
-      // Destructure `asChild` from props to ensure it's not spread onto the intrinsic element
-      asChild: _forwardedAsChild, 
-      ...props // Remaining props from Link (href, onClick, etc.)
+      ...restProps 
     },
     ref
   ) => {
-    const Comp = ownAsChild ? Slot : "a"; 
+    const Comp = renderAsSlot ? Slot : "a";
+    const { asChild, ...elementProps } = restProps;
 
     return (
       <Comp
@@ -570,8 +575,8 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props} // Spread the cleaned props (without asChild from Link)
+        className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
+        {...elementProps} 
       >
         {children}
       </Comp>
