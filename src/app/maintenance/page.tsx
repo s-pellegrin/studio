@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react'; // Changed 'next' to 'react'
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Table,
@@ -192,15 +192,15 @@ export default function MaintenancePage() {
                   <TableCell>{req.propertyId}{req.unitId ? ` - ${req.unitId}` : ''}</TableCell>
                   <TableCell>{format(new Date(req.reportedDate), 'MM/dd/yyyy')}</TableCell>
                   <TableCell>
-                    <Badge 
+                    <Badge
                       variant={getStatusBadgeVariant(req.status)}
-                      className={req.status === 'Completed' ? 'bg-green-500 hover:bg-green-600 text-white' : ''}
+                      className={`whitespace-nowrap ${req.status === 'Completed' ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
                     >
                       {req.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getPriorityBadgeVariant(req.priority)}>
+                    <Badge variant={getPriorityBadgeVariant(req.priority)} className="whitespace-nowrap">
                       {req.priority}
                     </Badge>
                   </TableCell>
@@ -280,7 +280,7 @@ export default function MaintenancePage() {
             <CardContent className="pt-6">
               {/* Can reuse renderWorkOrdersTable or create a specific one for requests */}
               <p className="text-muted-foreground">Tenant request portal and listing will be displayed here. Currently showing all work orders as placeholder.</p>
-              {renderWorkOrdersTable()} 
+              {renderWorkOrdersTable()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -319,7 +319,7 @@ export default function MaintenancePage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mt-4">
-                Generate and view various maintenance-related reports. For detailed reporting options, please visit the main 
+                Generate and view various maintenance-related reports. For detailed reporting options, please visit the main
                 <Link href="/reports/maintenance" className="text-primary hover:underline"> Maintenance Reports page</Link>.
               </p>
               {/* Placeholder for quick reports or links */}
