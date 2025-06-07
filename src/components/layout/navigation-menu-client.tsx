@@ -26,7 +26,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-// Removed Slot import as it's no longer used here based on latest strategy
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -118,7 +117,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} passHref legacyBehavior>
+                      <Link href={subItem.href} asChild>
                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                           <span>{subItem.label}</span>
                         </SidebarMenuSubButton>
@@ -138,7 +137,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <TooltipTrigger asChild>
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
-                      <Link href={item.href || '#'} passHref legacyBehavior>
+                      <Link href={item.href || '#'} asChild>
                         <SidebarMenuButton
                           className="justify-start"
                           isActive={isActive}

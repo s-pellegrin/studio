@@ -105,13 +105,13 @@ export default function RootLayout({
                 <AppLogo className="w-8 h-8 text-primary" />
                 <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">ManageMATE</span>
               </Link>
-              <SidebarTrigger /> {/* Moved SidebarTrigger here */}
+              <SidebarTrigger /> 
             </SidebarHeader>
             <SidebarContent className="p-2">
              <NavigationMenuClient navItems={navItems} />
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/upgrade" passHref legacyBehavior>
+              <Link href="/upgrade" asChild>
                 <SidebarMenuButton
                   className="justify-start"
                 >
@@ -123,7 +123,6 @@ export default function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-              {/* Removed SidebarTrigger from here */}
               {/* Global Search Bar */}
               <div className="flex-1 flex justify-center px-2 sm:px-4">
                 <div className="relative w-full max-w-md">
