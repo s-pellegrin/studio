@@ -78,6 +78,7 @@ const navItems = [
     subItems: [
       { href: '/ai-agent/my-agents', label: 'My Agents' },
       { href: '/ai-agent/knowledge-base', label: 'Knowledge Base' },
+      { href: '/ai-agent/api-keys', label: 'API Keys' },
     ]
   },
 ];
@@ -131,7 +132,7 @@ export default function RootLayout({
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar"/>
-                        <AvatarFallback>MM</AvatarFallback>
+                        <AvatarFallback>MA</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
