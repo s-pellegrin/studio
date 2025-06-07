@@ -183,12 +183,12 @@ const PropertyBrowserPage: NextPage = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                <div className="flex justify-between text-xs text-muted-foreground mb-2">
                   <span className="flex items-center"><BedDouble className="mr-1 h-4 w-4" /> {property.bedrooms} Beds</span>
                   <span className="flex items-center"><Bath className="mr-1 h-4 w-4" /> {property.bathrooms} Baths</span>
                   <span className="flex items-center"><DollarSign className="mr-1 h-4 w-4" /> {property.rent}/mo</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{property.sqft} sqft • {property.type}</p>
+                <p className="text-xs text-muted-foreground">{property.sqft} sqft • {property.type}</p>
               </CardContent>
               <CardFooter>
                 <Link href={`/properties/${property.id}`} passHref className="w-full">
