@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, MousePointerSquare, Zap, Play, Settings2, Save, TestTube2, MessageSquare, Clock, Users, FileText, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MousePointerSquareDashed, Zap, Play, Settings2, Save, TestTube2, MessageSquare, Clock, Users, FileText, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 const DraggableItem = ({ icon: Icon, name, description }: { icon: React.ElementType; name: string; description: string }) => (
@@ -84,7 +84,7 @@ export default function AutomationCanvasPage() {
         {/* Workflow Canvas (Main Area) */}
         <main className="flex-1 p-6 bg-muted/30 overflow-auto">
           <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg min-h-[600px] flex flex-col items-center justify-center text-muted-foreground">
-            <MousePointerSquare className="h-16 w-16 mb-4 opacity-50" />
+            <MousePointerSquareDashed className="h-16 w-16 mb-4 opacity-50" />
             <h2 className="text-xl font-medium mb-1">Workflow Canvas</h2>
             <p className="text-sm">Drag triggers and actions from the left panel to build your workflow.</p>
             <p className="text-xs mt-2">(Full drag-and-drop functionality to be implemented)</p>
