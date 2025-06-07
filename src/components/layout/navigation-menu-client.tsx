@@ -4,7 +4,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, Home, FileText, Users, DollarSign, Wrench,
-  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown
+  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown, Zap // Added Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,6 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
   Building,
   Brain,
   ChevronDown,
+  Zap, // Added Zap
 };
 
 interface NavSubItem {
@@ -93,7 +94,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
                         <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </div>
-                      <ChevronDown 
+                      <ChevronDown
                         className={cn(
                           "h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden",
                           isSubMenuOpen ? "rotate-180" : ""
@@ -110,7 +111,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              {isSubMenuOpen && (
+              {isSubMenuOpen && !isMobile && sidebarState === 'expanded' && (
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>

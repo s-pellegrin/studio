@@ -19,6 +19,7 @@ import {
   Bell,
   UserCircle,
   Languages,
+  Zap, // Added Zap
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -71,8 +72,9 @@ const navItems = [
   { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
   { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
   { href: '/properties', label: 'Property Browser', iconName: 'Building' },
-  { 
-    label: 'AI Agent', 
+  { href: '/automations', label: 'Automations', iconName: 'Zap' }, // Added Automations
+  {
+    label: 'AI Agent',
     iconName: 'Brain',
     // No direct href, it's a category/trigger for sub-menu
     subItems: [
@@ -121,7 +123,7 @@ export default function RootLayout({
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
               <div className="flex items-center gap-2">
-                <SidebarTrigger /> 
+                <SidebarTrigger />
               </div>
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" aria-label="Notifications">
