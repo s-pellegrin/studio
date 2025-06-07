@@ -24,7 +24,9 @@ import {
   Zap,
   Search,
   Rocket,
-  Sparkles, // Added for AI Assistant toggle
+  Sparkles,
+  Sun, // Added for theme toggle
+  Moon, // Added for theme toggle
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -55,7 +57,7 @@ import {
 import AppLogo from '@/components/layout/app-logo';
 import NavigationMenuClient from '@/components/layout/navigation-menu-client';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react'; // Added for state management
+import { useState, useEffect } from 'react';
 
 
 // export const metadata: Metadata = { // Metadata should be exported from server components or page.tsx
@@ -95,10 +97,39 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isAssistantMode, setIsAssistantMode] = useState(false);
+  const [theme, setTheme] = useState('light'); // 'light' or 'dark'
 
-  // It's better to handle metadata in page.tsx or a dedicated head.tsx for client components
-  // For simplicity, if you need a static title, you can set it directly in <head>
-  // or use `useEffect` to update document.title for dynamic titles.
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (storedTheme) {
+      setTheme(storedTheme);
+      if (storedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } else if (systemPrefersDark) {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+    } else {
+      setTheme('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -200,6 +231,14 @@ export default function RootLayout({
                         <DropdownMenuItem>Chinese (Simplified)</DropdownMenuItem>
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
+                    <DropdownMenuItem onClick={toggleTheme}>
+                      {theme === 'light' ? (
+                        <Moon className="mr-2 h-4 w-4" />
+                      ) : (
+                        <Sun className="mr-2 h-4 w-4" />
+                      )}
+                      <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
