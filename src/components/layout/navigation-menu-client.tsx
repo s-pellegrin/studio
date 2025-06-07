@@ -146,8 +146,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <TooltipTrigger asChild>
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
-                      <Link href={item.href || '#'} asChild>
-                        <Slot> 
+                      <Link href={item.href || '#'} passHref legacyBehavior>
                           <SidebarMenuButton
                             className="justify-start"
                             isActive={isActive}
@@ -155,7 +154,6 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                             {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
                             <span>{item.label}</span>
                           </SidebarMenuButton>
-                        </Slot>
                       </Link>
                     </span>
                   </TooltipTrigger>
