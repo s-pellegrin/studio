@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link'; // Import Link
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -33,9 +34,9 @@ interface AgentTool {
   color?: string;
 }
 
-interface Agent {
+export interface Agent { // Export Agent interface
   id: string;
-  agentIconUrl?: string; // URL for a specific agent icon image
+  agentIconUrl?: string;
   name: string;
   description: string;
   tools: AgentTool[];
@@ -49,7 +50,7 @@ interface Agent {
 const initialAgents: Agent[] = [
   {
     id: '1',
-    agentIconUrl: 'https://placehold.co/32x32.png', // Placeholder
+    agentIconUrl: 'https://placehold.co/32x32.png',
     name: 'Apla, the Account Planning Agent',
     description: 'Completes in-depth research on an account, produces a report and updates to your CRM.',
     tools: [
@@ -66,7 +67,7 @@ const initialAgents: Agent[] = [
   },
   {
     id: '2',
-    agentIconUrl: 'https://placehold.co/32x32.png', // Placeholder
+    agentIconUrl: 'https://placehold.co/32x32.png',
     name: 'Lima, the Lifecycle Marketing Agent',
     description: 'Sends hyper-personalised onboarding email sequence to new users.',
     tools: [
@@ -81,11 +82,11 @@ const initialAgents: Agent[] = [
   },
   {
     id: '3',
-    agentIconUrl: 'https://placehold.co/32x32.png', // Placeholder
+    agentIconUrl: 'https://placehold.co/32x32.png',
     name: "Lima's Researcher",
     description: 'Produces an in-depth research report on the customer.',
     tools: [
-      { id: 'globe', name: 'Web', icon: Globe }, // Representing 'G' for Google
+      { id: 'globe', name: 'Web', icon: Globe },
       { id: 'linkedin', name: 'LinkedIn', icon: Linkedin },
     ],
     toolCount: 2,
@@ -96,7 +97,6 @@ const initialAgents: Agent[] = [
   },
 ];
 
-// Helper to get a consistent "X time ago" string for client-side rendering
 const useTimeAgo = (date: Date) => {
   const [timeAgo, setTimeAgo] = useState('');
 
@@ -113,33 +113,63 @@ function AgentRow({ agent }: { agent: Agent }) {
   const createdTimeAgo = useTimeAgo(agent.created);
 
   return (
-    <TableRow>
+    <TableRow className="cursor-pointer hover:bg-muted/50">
       <TableCell className="w-10">
-        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </Link>
       </TableCell>
       <TableCell className="w-10">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref className="block">
         {agent.agentIconUrl ? (
           <Image src={agent.agentIconUrl} alt={agent.name} width={24} height={24} className="rounded-sm" data-ai-hint="agent logo" />
         ) : (
           <Bot className="h-6 w-6 text-muted-foreground" />
         )}
+        </Link>
       </TableCell>
-      <TableCell className="font-medium max-w-xs truncate">{agent.name}</TableCell>
-      <TableCell className="text-muted-foreground max-w-sm truncate">{agent.description}</TableCell>
+      <TableCell className="font-medium max-w-xs truncate">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref className="hover:underline">
+          {agent.name}
+        </Link>
+      </TableCell>
+      <TableCell className="text-muted-foreground max-w-sm truncate">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          {agent.description}
+        </Link>
+      </TableCell>
       <TableCell>
-        <div className="flex items-center space-x-1">
-          {agent.tools.slice(0, 4).map((tool) => (
-            <tool.icon key={tool.id} className={`h-4 w-4 ${tool.color || 'text-muted-foreground'}`} title={tool.name} />
-          ))}
-          {agent.toolCount && agent.tools.length < agent.toolCount && (
-            <span className="text-xs text-muted-foreground">+{agent.toolCount - agent.tools.length}</span>
-          )}
-        </div>
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          <div className="flex items-center space-x-1">
+            {agent.tools.slice(0, 4).map((tool) => (
+              <tool.icon key={tool.id} className={`h-4 w-4 ${tool.color || 'text-muted-foreground'}`} title={tool.name} />
+            ))}
+            {agent.toolCount && agent.tools.length < agent.toolCount && (
+              <span className="text-xs text-muted-foreground">+{agent.toolCount - agent.tools.length}</span>
+            )}
+          </div>
+        </Link>
       </TableCell>
-      <TableCell className="text-muted-foreground whitespace-nowrap">{lastRunTimeAgo}</TableCell>
-      <TableCell className="text-muted-foreground whitespace-nowrap">{lastModifiedTimeAgo}</TableCell>
-      <TableCell className="text-muted-foreground whitespace-nowrap">{createdTimeAgo}</TableCell>
-      <TableCell className="text-muted-foreground text-right">{agent.tasksDone}</TableCell>
+      <TableCell className="text-muted-foreground whitespace-nowrap">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          {lastRunTimeAgo}
+        </Link>
+      </TableCell>
+      <TableCell className="text-muted-foreground whitespace-nowrap">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+         {lastModifiedTimeAgo}
+        </Link>
+      </TableCell>
+      <TableCell className="text-muted-foreground whitespace-nowrap">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          {createdTimeAgo}
+        </Link>
+      </TableCell>
+      <TableCell className="text-muted-foreground text-right">
+        <Link href={`/ai-agent/my-agents/${agent.id}`} passHref>
+          {agent.tasksDone}
+        </Link>
+      </TableCell>
       <TableCell className="text-right">
         <Button variant="ghost" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
@@ -153,7 +183,6 @@ export default function MyAgentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [agents, setAgents] = useState<Agent[]>([]);
 
-  // Ensure initialAgents is only set once on the client after mount
   useEffect(() => {
     setAgents(initialAgents);
   }, []);
