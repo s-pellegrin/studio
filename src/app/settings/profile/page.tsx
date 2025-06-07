@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Added import
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -117,7 +117,7 @@ export default function ProfileSettingsPage() {
               <div className="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6">
                 <Avatar className="h-32 w-32 ring-2 ring-primary ring-offset-2 ring-offset-background">
                   <AvatarImage src={avatarPreview || undefined} alt="User Avatar" data-ai-hint="user avatar" />
-                  <AvatarFallback><User className="h-16 w-16" /></AvatarFallback>
+                  <AvatarFallback>MA</AvatarFallback>
                 </Avatar>
                 <div className="flex-grow space-y-2">
                   <Label htmlFor="avatar-upload" className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 w-full sm:w-auto">
