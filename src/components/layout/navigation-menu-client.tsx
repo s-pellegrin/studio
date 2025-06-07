@@ -9,6 +9,8 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { Slot } from "@radix-ui/react-slot"
+
 
 import {
   SidebarMenu,
@@ -124,7 +126,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} asChild>
+                      <Link href={subItem.href} passHref legacyBehavior>
                           <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                             <span>{subItem.label}</span>
                           </SidebarMenuSubButton>
@@ -145,6 +147,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
                       <Link href={item.href || '#'} asChild>
+                        <Slot> 
                           <SidebarMenuButton
                             className="justify-start"
                             isActive={isActive}
@@ -152,6 +155,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                             {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
                             <span>{item.label}</span>
                           </SidebarMenuButton>
+                        </Slot>
                       </Link>
                     </span>
                   </TooltipTrigger>
