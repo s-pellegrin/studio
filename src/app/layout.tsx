@@ -75,7 +75,18 @@ const navItems = [
   { href: '/tasks', label: 'Tasks', iconName: 'ListChecks' },
   { href: '/communication', label: 'Communication', iconName: 'MessageSquare' },
   { href: '/files', label: 'Files', iconName: 'Folder' },
-  { href: '/reports', label: 'Reports', iconName: 'BarChart2' },
+  {
+    label: 'Reports',
+    iconName: 'BarChart2',
+    subItems: [
+      { href: '/reports/financial', label: 'Financial Reports' },
+      { href: '/reports/operational', label: 'Operational Reports' },
+      { href: '/reports/maintenance', label: 'Maintenance Reports' },
+      { href: '/reports/tenant-leasing', label: 'Tenant & Leasing' },
+      { href: '/reports/association', label: 'Association Reports' },
+      { href: '/reports/custom-builder', label: 'Custom Report Builder' },
+    ]
+  },
   { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
   { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
   { href: '/properties', label: 'Property Browser', iconName: 'Building' },
