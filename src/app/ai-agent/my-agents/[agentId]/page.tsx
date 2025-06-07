@@ -35,6 +35,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input'; // Added Input import
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
@@ -42,7 +43,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { initialAgents, type Agent } from '../page'; // Assuming Agent type is exported
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
 import { useParams } from 'next/navigation';
 
 
@@ -79,15 +80,36 @@ export default function AgentDetailPage() {
   const agentId = params.agentId as string;
   const [agent, setAgent] = useState<Agent | null>(null);
 
+  const [editableAgentName, setEditableAgentName] = useState('');
+  const [editableAgentDescription, setEditableAgentDescription] = useState('');
+  const [agentRole, setAgentRole] = useState("You are a world-class salesperson and account executive who specialises in researching companies and recording useful notes for sales.");
+  const [agentCompany, setAgentCompany] = useState("You work for {{ company_name }}. Description: {{ company_description }}");
+  const [agentInstructions, setAgentInstructions] = useState("Your task is to compile a detailed research report on a prospect company. You will start with no prior knowledge about the company and will use various research methods to gather information.");
+  const [agentCoreFlow, setAgentCoreFlow] = useState(
+    `1/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect company's website; then use <ToolPill icon={ExtractContentIcon} text="Extract content from website" /> and <ToolPill text="Unknown reference" color="bg-red-200 text-red-800 border-red-400 hover:bg-red-300" /> to understand their products/services and key messaging.
+2/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect company's pricing page or other relevant queries and then use <ToolPill icon={ExtractContentIcon} text="Extract content from website" /> to find out how the company makes money.
+3/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect's annual revenue, usually getlatka.com has a good estimates.
+4/ Use <ToolPill icon={Globe} text="Google Search" /> to find the company's Linkedin page and use <ToolPill icon={Linkedin} text="Get Linkedin Profile" /> to find the employee count, industry, and any recent positive posts specifically relevant to the company.
+5/ Use <ToolPill icon={Globe} text="Google Search" /> to find recent positive news, announcements, and/or product releases from the prospect's company; these will be growth indicators of the company. Pick 2 websites from step 5 to dig deeper with <ToolPill icon={ExtractContentIcon} text="Extract content from website" />. If there is there any website url that ends with ".pdf" then use <ToolPill icon={FileText} text="Read PDF" />.
+6/ Use <ToolPill icon={Globe} text="Google Search" /> to find recent funding rounds of the prospect if any.
+7/ Use <ToolPill icon={AlertTriangle} text="Qualify account" /> to identify the account's fit score, which should be a score between 1 and 5 Chilli Peppers (to indicate how "hot" the account is).
+8/ Use <ToolPill icon={PenLine} text="Write conversation levers" /> to generate conversation levers.
+9/ Use <ToolPill icon={CheckCircle} text="Get validated & enriched prospects" /> to find relevant employees of the prospect's company to add as contacts. Then use <ToolPill icon={Share} text="Insert new contacts in HubSpot" /> to add these contacts to the CRM (never make up the contacts or fall back to famous contacts, only take contacts from the previous tool; if none, then skip)`
+  );
+
+
   useEffect(() => {
     if (agentId) {
       const foundAgent = initialAgents.find(a => a.id === agentId);
       setAgent(foundAgent || null);
+      if (foundAgent) {
+        setEditableAgentName(foundAgent.name);
+        setEditableAgentDescription(foundAgent.description);
+        // Potentially set role, company, instructions, core flow if they exist on Agent type
+      }
     }
   }, [agentId]);
   
-  const agentName = agent?.name || "Agent";
-  const agentDescription = agent?.description || "Agent description not found.";
   const agentIconUrl = agent?.agentIconUrl || "https://placehold.co/40x40.png";
 
 
@@ -122,8 +144,8 @@ export default function AgentDetailPage() {
           <Link href="/ai-agent/my-agents" passHref>
              <Button variant="ghost" size="icon"> <ArrowLeft className="h-5 w-5" /></Button>
           </Link>
-          {agentIconUrl ? <Image src={agentIconUrl} alt="Agent Icon" width={24} height={24} className="rounded-sm" data-ai-hint="agent logo pixelated" /> : <Bot className="h-6 w-6" /> }
-          <span className="font-semibold">{agentName}</span>
+          {agentIconUrl ? <Image src={agentIconUrl} alt="Agent Icon" width={24} height={24} className="rounded-sm" data-ai-hint="agent logo pixelated"/> : <Bot className="h-6 w-6" /> }
+          <span className="font-semibold">{editableAgentName || "Agent"}</span>
           <Button variant="ghost" size="icon" className="h-6 w-6"><ChevronDown className="h-4 w-4" /></Button>
           <Badge variant="outline">Unsaved</Badge>
         </div>
@@ -162,9 +184,20 @@ export default function AgentDetailPage() {
           <div className="max-w-3xl mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-4">
               {agentIconUrl ? <Image src={agentIconUrl} alt="Agent Icon" width={40} height={40} className="rounded-md" data-ai-hint="agent logo pixelated" /> : <Bot className="h-10 w-10" /> }
-              <div>
-                <h1 className="text-xl font-semibold">{agentName}</h1>
-                <p className="text-sm text-muted-foreground">{agentDescription}</p>
+              <div className="w-full">
+                 <Input
+                    value={editableAgentName}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEditableAgentName(e.target.value)}
+                    placeholder="Agent Name"
+                    className="text-xl font-semibold border-muted-foreground/30 focus:border-primary p-2 h-auto"
+                  />
+                  <Textarea
+                    value={editableAgentDescription}
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditableAgentDescription(e.target.value)}
+                    placeholder="Agent Description"
+                    className="text-sm text-muted-foreground border-muted-foreground/30 focus:border-primary mt-1 p-2"
+                    rows={2}
+                  />
               </div>
             </div>
 
@@ -172,7 +205,8 @@ export default function AgentDetailPage() {
               <h2 className="text-lg font-semibold mb-1">Your role</h2>
               <Textarea
                 placeholder="You are a world-class salesperson and account executive..."
-                defaultValue="You are a world-class salesperson and account executive who specialises in researching companies and recording useful notes for sales."
+                value={agentRole}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAgentRole(e.target.value)}
                 rows={3}
                 className="border-muted-foreground/30 focus:border-primary"
               />
@@ -182,7 +216,8 @@ export default function AgentDetailPage() {
               <h2 className="text-lg font-semibold mb-1">Your company</h2>
               <Textarea
                 placeholder="You work for {{ company_name }}. Description: {{ company_description }}"
-                defaultValue="You work for {{ company_name }}. Description: {{ company_description }}"
+                value={agentCompany}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAgentCompany(e.target.value)}
                 rows={2}
                 className="border-muted-foreground/30 focus:border-primary"
               />
@@ -192,7 +227,8 @@ export default function AgentDetailPage() {
               <h2 className="text-lg font-semibold mb-1">Instructions</h2>
               <Textarea
                 placeholder="Your task is to compile a detailed research report..."
-                defaultValue="Your task is to compile a detailed research report on a prospect company. You will start with no prior knowledge about the company and will use various research methods to gather information."
+                value={agentInstructions}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAgentInstructions(e.target.value)}
                 rows={4}
                 className="border-muted-foreground/30 focus:border-primary"
               />
@@ -200,17 +236,13 @@ export default function AgentDetailPage() {
 
             <div>
               <h2 className="text-lg font-semibold mb-2">Core flow to always follow step by step</h2>
-              <div className="p-4 border rounded-md space-y-3 bg-muted/30 border-muted-foreground/30">
-                <div className="text-sm">1/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect company's website; then use <ToolPill icon={ExtractContentIcon} text="Extract content from website" /> and <ToolPill text="Unknown reference" color="bg-red-200 text-red-800 border-red-400 hover:bg-red-300" /> to understand their products/services and key messaging.</div>
-                <div className="text-sm">2/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect company's pricing page or other relevant queries and then use <ToolPill icon={ExtractContentIcon} text="Extract content from website" /> to find out how the company makes money.</div>
-                <div className="text-sm">3/ Use <ToolPill icon={Globe} text="Google Search" /> to find the prospect's annual revenue, usually getlatka.com has a good estimates.</div>
-                <div className="text-sm">4/ Use <ToolPill icon={Globe} text="Google Search" /> to find the company's Linkedin page and use <ToolPill icon={Linkedin} text="Get Linkedin Profile" /> to find the employee count, industry, and any recent positive posts specifically relevant to the company.</div>
-                <div className="text-sm">5/ Use <ToolPill icon={Globe} text="Google Search" /> to find recent positive news, announcements, and/or product releases from the prospect's company; these will be growth indicators of the company. Pick 2 websites from step 5 to dig deeper with <ToolPill icon={ExtractContentIcon} text="Extract content from website" />. If there is there any website url that ends with ".pdf" then use <ToolPill icon={FileText} text="Read PDF" />.</div>
-                <div className="text-sm">6/ Use <ToolPill icon={Globe} text="Google Search" /> to find recent funding rounds of the prospect if any.</div>
-                <div className="text-sm">7/ Use <ToolPill icon={AlertTriangle} text="Qualify account" /> to identify the account's fit score, which should be a score between 1 and 5 Chilli Peppers (to indicate how "hot" the account is).</div>
-                <div className="text-sm">8/ Use <ToolPill icon={PenLine} text="Write conversation levers" /> to generate conversation levers.</div>
-                <div className="text-sm">9/ Use <ToolPill icon={CheckCircle} text="Get validated & enriched prospects" /> to find relevant employees of the prospect's company to add as contacts. Then use <ToolPill icon={Share} text="Insert new contacts in HubSpot" /> to add these contacts to the CRM (never make up the contacts or fall back to famous contacts, only take contacts from the previous tool; if none, then skip)</div>
-              </div>
+               <Textarea
+                placeholder="Describe the core flow steps here..."
+                value={agentCoreFlow}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAgentCoreFlow(e.target.value)}
+                rows={15} // Adjust rows as needed for better editing experience
+                className="border-muted-foreground/30 focus:border-primary p-4 bg-muted/30"
+              />
             </div>
              <div className="flex items-center justify-between text-sm mt-4">
                 <Button variant="outline" size="sm"><RefreshCw className="h-4 w-4 mr-2"/>Run task</Button>
@@ -279,5 +311,4 @@ export default function AgentDetailPage() {
     </div>
   );
 }
-
     
