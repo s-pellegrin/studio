@@ -20,8 +20,8 @@ import {
   UserCircle,
   Languages,
   Zap,
-  Search, // Added Search icon
-  Rocket, // Added Rocket icon
+  Search,
+  Rocket,
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -51,7 +51,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import AppLogo from '@/components/layout/app-logo';
 import NavigationMenuClient from '@/components/layout/navigation-menu-client';
-import { Input } from '@/components/ui/input'; // Added Input import
+import { Input } from '@/components/ui/input';
 
 
 export const metadata: Metadata = {
@@ -59,8 +59,6 @@ export const metadata: Metadata = {
   description: 'Modern Property Management System',
 };
 
-// Updated NavItem type definition will be in NavigationMenuClient.tsx
-// This array structure will be interpreted by NavigationMenuClient.tsx
 const navItems = [
   { href: '/', label: 'Dashboard', iconName: 'LayoutDashboard' },
   { href: '/rentals', label: 'Rentals', iconName: 'Home' },
@@ -79,7 +77,6 @@ const navItems = [
   {
     label: 'AI Agent',
     iconName: 'Brain',
-    // No direct href, it's a category/trigger for sub-menu
     subItems: [
       { href: '/ai-agent/my-agents', label: 'My Agents' },
       { href: '/ai-agent/knowledge-base', label: 'Knowledge Base' },
@@ -103,11 +100,12 @@ export default function RootLayout({
       <body className={cn('font-body antialiased min-h-screen bg-background')}>
         <SidebarProvider>
           <Sidebar variant="sidebar" collapsible="icon" className="border-r">
-            <SidebarHeader className="p-4">
+            <SidebarHeader className="p-4 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
                 <AppLogo className="w-8 h-8 text-primary" />
                 <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">ManageMATE</span>
               </Link>
+              <SidebarTrigger /> {/* Moved SidebarTrigger here */}
             </SidebarHeader>
             <SidebarContent className="p-2">
              <NavigationMenuClient navItems={navItems} />
@@ -125,10 +123,7 @@ export default function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-              <div className="flex items-center">
-                <SidebarTrigger />
-              </div>
-
+              {/* Removed SidebarTrigger from here */}
               {/* Global Search Bar */}
               <div className="flex-1 flex justify-center px-2 sm:px-4">
                 <div className="relative w-full max-w-md">
