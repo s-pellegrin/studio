@@ -115,7 +115,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} passHref legacyBehavior={false} asChild>
+                      <Link href={subItem.href} passHref legacyBehavior>
                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                           <span>{subItem.label}</span>
                         </SidebarMenuSubButton>
@@ -135,7 +135,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <TooltipTrigger asChild>
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
-                      <Link href={item.href || '#'} asChild>
+                      <Link href={item.href || '#'} passHref legacyBehavior>
                         <SidebarMenuButton
                           className="justify-start"
                           isActive={isActive}
