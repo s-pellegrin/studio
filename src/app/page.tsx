@@ -394,10 +394,10 @@ export default function DashboardPage() {
           <CardContent>
              <Tabs defaultValue="0-30" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
-                <TabsTrigger value="0-30" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">0 - 30 days ({expiringLeases30Days})</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">31 - 60 days ({expiringLeases60Days})</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">61 - 90 days ({expiringLeases90Days})</TabsTrigger>
-                <TabsTrigger value="all" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">All ({totalExpiringLeases})</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0 - 30 days ({expiringLeases30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31 - 60 days ({expiringLeases60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61 - 90 days ({expiringLeases90Days})</TabsTrigger>
+                <TabsTrigger value="all" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">All ({totalExpiringLeases})</TabsTrigger>
               </TabsList>
               <TabsContent value="0-30">
                 <div className="w-full h-40"> 
@@ -453,10 +453,10 @@ export default function DashboardPage() {
           <CardContent>
              <Tabs defaultValue="expired" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
-                <TabsTrigger value="expired" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">Expired ({lapsedInsuranceCount})</TabsTrigger>
-                <TabsTrigger value="0-30" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">0 - 30 days ({expiringInsurance30Days})</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">31 - 60 days ({expiringInsurance60Days})</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-1 py-1 text-[10px] sm:text-xs leading-tight">61 - 90 days ({expiringInsurance90Days})</TabsTrigger>
+                <TabsTrigger value="expired" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">Expired ({lapsedInsuranceCount})</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0 - 30 days ({expiringInsurance30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31 - 60 days ({expiringInsurance60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61 - 90 days ({expiringInsurance90Days})</TabsTrigger>
               </TabsList>
               <TabsContent value="expired">
                 {lapsedInsuranceCount > 0 ? (
