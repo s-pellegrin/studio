@@ -519,7 +519,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary data-[active=true]:font-medium data-[active=true]:text-sidebar-primary-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -541,13 +541,14 @@ const sidebarMenuButtonVariants = cva(
 )
 
 interface SidebarMenuButtonProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  extends React.HTMLAttributes<HTMLDivElement>, // Changed from React.AnchorHTMLAttributes<HTMLAnchorElement>
     VariantProps<typeof sidebarMenuButtonVariants> {
   isActive?: boolean;
+  asChild?: boolean; // Keep asChild for Slot compatibility if needed, though Link handles it.
 }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLAnchorElement,
+  HTMLDivElement, // Changed from HTMLAnchorElement
   SidebarMenuButtonProps
 >(
   (
@@ -557,15 +558,18 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       className,
       children,
+      asChild, // Destructure asChild
       ...restProps
     },
     ref
   ) => {
-    const Comp = "a";
+    const Comp = asChild ? Slot : "div"; // Use Slot if asChild is true, otherwise div
 
     const elementProps = { ...restProps };
-    delete elementProps.asChild;
-    delete (elementProps as any).aschild;
+    // Ensure href is not passed to div if it's there
+    delete (elementProps as any).href;
+    // asChild prop itself should not be spread to the DOM element by Slot or div
+    // No need to delete asChild here if Comp handles it or if it's not in restProps
 
     return (
       <Comp
@@ -573,6 +577,8 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
+        role={!asChild ? "button" : undefined} // Add role if it's a div acting as a button
+        tabIndex={!asChild ? 0 : undefined} // Make it focusable if it's a div
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
         {...elementProps}
       >
@@ -696,21 +702,22 @@ const SidebarMenuSubItem = React.forwardRef<
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 interface SidebarMenuSubButtonProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
-    VariantProps<typeof sidebarMenuButtonVariants> { // Reusing variants for consistency, can be simpler if needed
+  extends React.HTMLAttributes<HTMLDivElement>, // Changed from React.AnchorHTMLAttributes<HTMLAnchorElement>
+    VariantProps<typeof sidebarMenuButtonVariants> { 
   size?: "sm" | "md";
   isActive?: boolean;
+  asChild?: boolean; // Keep for Slot
 }
 
 const SidebarMenuSubButton = React.forwardRef<
-  HTMLAnchorElement,
+  HTMLDivElement, // Changed from HTMLAnchorElement
   SidebarMenuSubButtonProps
->(({ size = "md", isActive, className, children, ...restProps }, ref) => {
-  const Comp = "a";
+>(({ size = "md", isActive, className, children, asChild, ...restProps }, ref) => {
+  const Comp = asChild ? Slot : "div"; // Use Slot if asChild is true, otherwise div
 
   const elementProps = { ...restProps };
-  delete elementProps.asChild;
-  delete (elementProps as any).aschild;
+  delete (elementProps as any).href;
+  // No need to delete asChild if Comp handles it
 
   return (
     <Comp
@@ -718,6 +725,8 @@ const SidebarMenuSubButton = React.forwardRef<
       data-sidebar="menu-sub-button"
       data-size={size}
       data-active={isActive}
+      role={!asChild ? "link" : undefined} // Add role if it's a div acting as a link
+      tabIndex={!asChild ? 0 : undefined} // Make it focusable if it's a div
       className={cn(
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
@@ -760,3 +769,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
