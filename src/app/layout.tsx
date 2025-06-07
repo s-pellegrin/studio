@@ -1,5 +1,4 @@
 
-
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -19,7 +18,7 @@ import {
   Settings,
   Bell,
   UserCircle,
-  Languages, // Added Languages icon
+  Languages,
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -30,8 +29,6 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
   SidebarInset,
@@ -45,11 +42,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub, // Added DropdownMenuSub
-  DropdownMenuSubContent, // Added DropdownMenuSubContent
-  DropdownMenuSubTrigger, // Added DropdownMenuSubTrigger
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import AppLogo from '@/components/layout/app-logo';
+import NavigationMenuClient from '@/components/layout/navigation-menu-client';
+
 
 export const metadata: Metadata = {
   title: 'ManageMATE',
@@ -95,24 +94,10 @@ export default function RootLayout({
               </Link>
             </SidebarHeader>
             <SidebarContent className="p-2">
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <Link href={item.href} asChild>
-                      <SidebarMenuButton
-                        tooltip={{ children: item.label, side: 'right', className: 'ml-1' }}
-                        className="justify-start"
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </Link>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+             <NavigationMenuClient navItems={navItems} />
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/settings" asChild>
+              <Link href="/settings" passHref asChild>
                 <SidebarMenuButton
                   tooltip={{ children: 'Settings', side: 'right', className: 'ml-1' }}
                   className="justify-start"
@@ -127,7 +112,6 @@ export default function RootLayout({
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="md:hidden" />
-                {/* Page title can be dynamic here */}
               </div>
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" aria-label="Notifications">
@@ -145,14 +129,18 @@ export default function RootLayout({
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <UserCircle className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
+                    <Link href="/settings/profile" passHref>
+                      <DropdownMenuItem>
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/settings" passHref>
+                      <DropdownMenuItem>
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuSeparator />
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
