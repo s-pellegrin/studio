@@ -43,7 +43,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { initialAgents, type Agent } from '../page'; // Assuming Agent type is exported
 import { useEffect, useState } from 'react';
-import { useParams }<start_of_audio>from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 
 const ToolPill = ({ icon: Icon, text, color }: { icon?: React.ElementType; text: string; color?: string }) => (
@@ -279,3 +279,5 @@ export default function AgentDetailPage() {
     </div>
   );
 }
+
+    
