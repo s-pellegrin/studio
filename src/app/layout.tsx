@@ -100,12 +100,11 @@ export default function RootLayout({
       <body className={cn('font-body antialiased min-h-screen bg-background')}>
         <SidebarProvider>
           <Sidebar variant="sidebar" collapsible="icon" className="border-r">
-            <SidebarHeader className="p-4 flex items-center justify-between">
+            <SidebarHeader className="p-4 flex items-center">
               <Link href="/" className="flex items-center gap-2">
                 <AppLogo className="w-8 h-8 text-primary" />
                 <span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">ManageMATE</span>
               </Link>
-              <SidebarTrigger /> 
             </SidebarHeader>
             <SidebarContent className="p-2">
              <NavigationMenuClient navItems={navItems} />
@@ -123,7 +122,9 @@ export default function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-              {/* Global Search Bar */}
+              <div className="flex items-center">
+                <SidebarTrigger /> {/* Moved SidebarTrigger here */}
+              </div>
               <div className="flex-1 flex justify-center px-2 sm:px-4">
                 <div className="relative w-full max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
