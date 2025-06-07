@@ -73,11 +73,11 @@ const navItems = [
   { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
   { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
   { href: '/properties', label: 'Property Browser', iconName: 'Building' },
-  { href: '/automations', label: 'Automations', iconName: 'Zap' },
   {
     label: 'AI Agent',
     iconName: 'Brain',
     subItems: [
+      { href: '/automations', label: 'Automations' },
       { href: '/ai-agent/my-agents', label: 'My Agents' },
       { href: '/ai-agent/knowledge-base', label: 'Knowledge Base' },
       { href: '/ai-agent/api-keys', label: 'API Keys' },
