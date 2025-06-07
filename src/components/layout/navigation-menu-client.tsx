@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+// Removed Slot import as it's no longer used here based on latest strategy
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -79,6 +80,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
 
         if (item.subItems) {
           const isAnySubItemActive = item.subItems.some(sub => pathname.startsWith(sub.href));
+          // Parent of a sub-menu is a button, not a link
           return (
             <SidebarMenuItem key={item.label}>
               <TooltipProvider delayDuration={0}>
@@ -89,9 +91,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                       isActive={isAnySubItemActive}
                       onClick={() => toggleSubMenu(item.label)}
                       aria-expanded={isSubMenuOpen}
-                      // item.href is undefined for parent sub-menu items, SidebarMenuButton renders <a>
-                      // but it won't navigate if href is undefined. It will act as a button.
-                      href={item.href} 
+                      // No href here, it acts as a button
                     >
                       <div className="flex items-center gap-2">
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
@@ -118,7 +118,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} asChild>
+                      <Link href={subItem.href} passHref legacyBehavior>
                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                           <span>{subItem.label}</span>
                         </SidebarMenuSubButton>
@@ -138,8 +138,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <TooltipTrigger asChild>
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
-                      <Link href={item.href || '#'} asChild>
-                        {/* SidebarMenuButton is now the direct child of Link asChild */}
+                      <Link href={item.href || '#'} passHref legacyBehavior>
                         <SidebarMenuButton
                           className="justify-start"
                           isActive={isActive}
