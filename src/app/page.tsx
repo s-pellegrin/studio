@@ -78,7 +78,7 @@ const dashboardData = {
   },
   expiringLeases: {
     value: `${expiringLeasesCount} Leases`,
-    description: 'Expiring in next 30 days',
+    description: 'Ending in next 30 days. Review for renewal or new listing.',
     count: expiringLeasesCount,
   },
   rentersInsurance: {
@@ -144,9 +144,9 @@ export default function DashboardPage() {
           description={dashboardData.expiringLeases.description}
           icon={FileClock}
           action={
-            <Link href="/tenants?filter=expiring-leases" passHref>
+            <Link href="/leasing" passHref>
               <Button variant="outline" size="sm" className="w-full">
-                Review Leases <ArrowRight className="ml-2 h-4 w-4" />
+                Go to Leasing <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           }
