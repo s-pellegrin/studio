@@ -19,12 +19,13 @@ import {
   Settings,
   Bell,
   UserCircle,
+  Languages, // Added Languages icon
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import {
-  SidebarProvider, // Will now import the re-exported ClientSidebarProvider as SidebarProvider
+  SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
@@ -44,6 +45,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub, // Added DropdownMenuSub
+  DropdownMenuSubContent, // Added DropdownMenuSubContent
+  DropdownMenuSubTrigger, // Added DropdownMenuSubTrigger
 } from '@/components/ui/dropdown-menu';
 import AppLogo from '@/components/layout/app-logo';
 
@@ -82,7 +86,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased min-h-screen bg-background')}>
-        <SidebarProvider> {/* Using the re-exported ClientSidebarProvider as SidebarProvider */}
+        <SidebarProvider>
           <Sidebar variant="sidebar" collapsible="icon" className="border-r">
             <SidebarHeader className="p-4">
               <Link href="/" className="flex items-center gap-2">
@@ -141,8 +145,26 @@ export default function RootLayout({
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Languages className="mr-2 h-4 w-4" />
+                        <span>Language</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem>English</DropdownMenuItem>
+                        <DropdownMenuItem>Chinese (Traditional)</DropdownMenuItem>
+                        <DropdownMenuItem>Chinese (Simplified)</DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>Logout</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -157,5 +179,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    
