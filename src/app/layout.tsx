@@ -24,7 +24,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import {
-  SidebarProvider, // Ensure this is imported as SidebarProvider
+  SidebarProvider, // Will now import the re-exported ClientSidebarProvider as SidebarProvider
   Sidebar,
   SidebarHeader,
   SidebarContent,
@@ -82,7 +82,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn('font-body antialiased min-h-screen bg-background')}>
-        <SidebarProvider> {/* Using the main SidebarProvider */}
+        <SidebarProvider> {/* Using the re-exported ClientSidebarProvider as SidebarProvider */}
           <Sidebar variant="sidebar" collapsible="icon" className="border-r">
             <SidebarHeader className="p-4">
               <Link href="/" className="flex items-center gap-2">

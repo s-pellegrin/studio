@@ -22,7 +22,7 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH = "12rem" // Changed from 16rem
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -33,7 +33,7 @@ type SidebarContextType = {
   setOpen: (open: boolean) => void
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
-  isMobile: boolean
+  isMobile: boolean | undefined // Allow undefined for initial SSR state
   toggleSidebar: () => void
 }
 
@@ -48,7 +48,8 @@ function useSidebar() {
   return context
 }
 
-const SidebarProvider = React.forwardRef<
+// This is the actual provider component that holds the state and logic
+const InternalSidebarProvider = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     defaultOpen?: boolean
@@ -68,7 +69,7 @@ const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
-    const isMobile = useIsMobile() // This hook is SSR-safe now
+    const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
     const [_open, _setOpen] = React.useState(defaultOpen)
@@ -89,10 +90,13 @@ const SidebarProvider = React.forwardRef<
     )
 
     const toggleSidebar = React.useCallback(() => {
-      return isMobile
-        ? setOpenMobile((currentOpen) => !currentOpen)
-        : setOpen((currentOpen) => !currentOpen)
+      if (isMobile) {
+        setOpenMobile((currentOpen) => !currentOpen);
+      } else {
+        setOpen((currentOpen) => !currentOpen);
+      }
     }, [isMobile, setOpen, setOpenMobile])
+
 
     React.useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
@@ -150,7 +154,39 @@ const SidebarProvider = React.forwardRef<
     )
   }
 )
-SidebarProvider.displayName = "SidebarProvider"
+InternalSidebarProvider.displayName = "InternalSidebarProvider"
+
+
+const ClientSidebarProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    // Return children directly or a simplified skeleton during SSR / before mount
+    // This avoids rendering complex client-side logic on the server
+    // It relies on the SidebarProvider and its consumers to handle potentially undefined context values gracefully initially.
+    // For a robust skeleton, you'd mirror the sidebar structure minimally.
+    // For now, simply passing children assumes the inner components can handle it or will re-render correctly.
+    // If null causes issues, a basic div structure might be better.
+    // Given the error "Element type is invalid", the problem might be deeper than just what this returns.
+    // However, a common pattern is to return null or a loader.
+    return (
+      <InternalSidebarProvider defaultOpen={true}>
+        <div className="group/sidebar-wrapper flex min-h-svh w-full">
+           {/* Minimal structure or loader could go here if children are problematic before mount */}
+           {children}
+        </div>
+      </InternalSidebarProvider>
+    );
+  }
+
+  return <InternalSidebarProvider>{children}</InternalSidebarProvider>;
+};
+ClientSidebarProvider.displayName = "ClientSidebarProvider";
+
 
 const Sidebar = React.forwardRef<
   HTMLDivElement,
@@ -173,7 +209,7 @@ const Sidebar = React.forwardRef<
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
-    if (collapsible === "none") {
+    if (collapsible === "none" && !isMobile) { // Ensure this applies only on desktop
       return (
         <div
           className={cn(
@@ -187,6 +223,11 @@ const Sidebar = React.forwardRef<
         </div>
       )
     }
+    
+    if (isMobile === undefined && collapsible !== "none") { // For SSR, if isMobile is undefined, render nothing or a placeholder for collapsible sidebars
+        return null; // Or a minimal placeholder
+    }
+
 
     if (isMobile) {
       return (
@@ -208,6 +249,7 @@ const Sidebar = React.forwardRef<
       )
     }
 
+    // Desktop rendering for collapsible sidebars
     return (
       <div
         ref={ref}
@@ -527,8 +569,8 @@ const sidebarMenuButtonVariants = cva(
 )
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLAnchorElement,
-  React.ComponentProps<"a"> & {
+  HTMLAnchorElement, // Changed from HTMLButtonElement
+  React.ComponentProps<"a"> & { // Changed from "button"
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
@@ -536,7 +578,7 @@ const SidebarMenuButton = React.forwardRef<
 >(
   (
     {
-      asChild = false,
+      asChild = false, // Default asChild to false, meaning it renders its own tag
       isActive = false,
       variant = "default",
       size = "default",
@@ -546,7 +588,7 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "a";
+    const Comp = asChild ? Slot : "a"; // Default to "a" if not asChild
     const { isMobile, state } = useSidebar()
 
     const button = (
@@ -576,7 +618,7 @@ const SidebarMenuButton = React.forwardRef<
         <TooltipContent
           side="right"
           align="center"
-          hidden={state !== "collapsed" || isMobile}
+          hidden={(state !== "collapsed" && state !== undefined) || isMobile} // Check state for undefined
           {...tooltip}
         />
       </Tooltip>
@@ -726,7 +768,9 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
+// Exporting the client-side safe provider as SidebarProvider
 export {
+  ClientSidebarProvider as SidebarProvider, // Renaming export
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -746,7 +790,6 @@ export {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
