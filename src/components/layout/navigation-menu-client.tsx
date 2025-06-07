@@ -9,6 +9,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { Slot } from '@radix-ui/react-slot'; // Import Slot
 
 import {
   SidebarMenu,
@@ -84,7 +85,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                     {/* This SidebarMenuButton is a button, not an anchor, so no Link wrapper */}
+                    {/* This SidebarMenuButton is a button, not an anchor, so no Link wrapper */}
                     <SidebarMenuButton
                       className="justify-between w-full"
                       isActive={isAnySubItemActive}
@@ -118,9 +119,11 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
                       <Link href={subItem.href} asChild>
-                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                          <span>{subItem.label}</span>
-                        </SidebarMenuSubButton>
+                        <Slot> {/* Wrap SidebarMenuSubButton with Slot */}
+                          <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                            <span>{subItem.label}</span>
+                          </SidebarMenuSubButton>
+                        </Slot>
                       </Link>
                     </SidebarMenuSubItem>
                   ))}
@@ -138,13 +141,15 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
                       <Link href={item.href || '#'} asChild>
-                        <SidebarMenuButton
-                          className="justify-start"
-                          isActive={isActive}
-                        >
-                          {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
+                        <Slot> {/* Wrap SidebarMenuButton with Slot */}
+                          <SidebarMenuButton
+                            className="justify-start"
+                            isActive={isActive}
+                          >
+                            {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </Slot>
                       </Link>
                     </span>
                   </TooltipTrigger>
