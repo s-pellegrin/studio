@@ -1,4 +1,6 @@
 
+'use client';
+
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -22,6 +24,7 @@ import {
   Zap,
   Search,
   Rocket,
+  Sparkles, // Added for AI Assistant toggle
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -52,12 +55,13 @@ import {
 import AppLogo from '@/components/layout/app-logo';
 import NavigationMenuClient from '@/components/layout/navigation-menu-client';
 import { Input } from '@/components/ui/input';
+import { useState } from 'react'; // Added for state management
 
 
-export const metadata: Metadata = {
-  title: 'ManageMATE',
-  description: 'Modern Property Management System',
-};
+// export const metadata: Metadata = { // Metadata should be exported from server components or page.tsx
+//   title: 'ManageMATE',
+//   description: 'Modern Property Management System',
+// };
 
 const navItems = [
   { href: '/', label: 'Dashboard', iconName: 'LayoutDashboard' },
@@ -90,9 +94,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isAssistantMode, setIsAssistantMode] = useState(false);
+
+  // It's better to handle metadata in page.tsx or a dedicated head.tsx for client components
+  // For simplicity, if you need a static title, you can set it directly in <head>
+  // or use `useEffect` to update document.title for dynamic titles.
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <title>ManageMATE</title>
+        <meta name="description" content="Modern Property Management System" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -110,7 +122,7 @@ export default function RootLayout({
              <NavigationMenuClient navItems={navItems} />
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/upgrade" asChild>
+              <Link href="/upgrade" passHref legacyBehavior>
                 <SidebarMenuButton
                   className="justify-start"
                 >
@@ -123,16 +135,28 @@ export default function RootLayout({
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
               <div className="flex items-center">
-                <SidebarTrigger /> {/* Moved SidebarTrigger here */}
+                <SidebarTrigger />
               </div>
+              
               <div className="flex-1 flex justify-center px-2 sm:px-4">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search anything..."
-                    className="w-full pl-10 h-10 text-sm"
-                  />
+                <div className="flex items-center w-full max-w-lg gap-2"> {/* Increased max-width slightly */}
+                  <div className="relative flex-grow">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="search"
+                      placeholder={isAssistantMode ? "Ask your AI Assistant..." : "Search anything..."}
+                      className="w-full pl-10 h-10 text-sm"
+                      // Add onKeyDown or other handlers for search/AI submission later
+                    />
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsAssistantMode(!isAssistantMode)}
+                    aria-label={isAssistantMode ? "Switch to Search Mode" : "Switch to AI Assistant Mode"}
+                  >
+                    {isAssistantMode ? <Search className="h-5 w-5" /> : <Sparkles className="h-5 w-5 text-primary" />}
+                  </Button>
                 </div>
               </div>
 
