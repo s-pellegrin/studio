@@ -78,17 +78,19 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
 
         if (item.subItems) {
           const isAnySubItemActive = item.subItems.some(sub => pathname.startsWith(sub.href));
+          // For parent items of sub-menus, SidebarMenuButton acts as a button, not a link
           return (
             <SidebarMenuItem key={item.label}>
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
+                     {/* This SidebarMenuButton is a button, not an anchor, so no Link wrapper */}
                     <SidebarMenuButton
                       className="justify-between w-full"
                       isActive={isAnySubItemActive}
                       onClick={() => toggleSubMenu(item.label)}
                       aria-expanded={isSubMenuOpen}
-                      // This button acts as a trigger, not a link itself
+                      // Explicitly not passing href to this button-like SidebarMenuButton
                     >
                       <div className="flex items-center gap-2">
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
@@ -115,7 +117,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} passHref legacyBehavior>
+                      <Link href={subItem.href} asChild>
                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                           <span>{subItem.label}</span>
                         </SidebarMenuSubButton>
@@ -135,7 +137,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <TooltipTrigger asChild>
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
-                      <Link href={item.href || '#'} passHref legacyBehavior>
+                      <Link href={item.href || '#'} asChild>
                         <SidebarMenuButton
                           className="justify-start"
                           isActive={isActive}

@@ -540,21 +540,18 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
-interface SidebarMenuButtonPropsInternal extends VariantProps<typeof sidebarMenuButtonVariants> {
-  children?: React.ReactNode;
-  className?: string;
+interface SidebarMenuButtonProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    VariantProps<typeof sidebarMenuButtonVariants> {
   isActive?: boolean;
-  renderAsSlot?: boolean;
-  [key: string]: any;
 }
 
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement,
-  SidebarMenuButtonPropsInternal
+  SidebarMenuButtonProps
 >(
   (
     {
-      renderAsSlot = false,
       isActive = false,
       variant = "default",
       size = "default",
@@ -564,12 +561,11 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    const Comp = renderAsSlot ? Slot : "a";
+    const Comp = "a";
 
-    // Create a new object for props to be spread, explicitly deleting asChild and aschild
     const elementProps = { ...restProps };
-    delete elementProps.asChild; // Remove camelCase version
-    delete (elementProps as any).aschild; // Remove lowercase version, casting to any to bypass strict TS check if not in type
+    delete elementProps.asChild;
+    delete (elementProps as any).aschild;
 
     return (
       <Comp
@@ -699,15 +695,22 @@ const SidebarMenuSubItem = React.forwardRef<
 >(({ ...props }, ref) => <li ref={ref} {...props} />)
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
+interface SidebarMenuSubButtonProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement>,
+    VariantProps<typeof sidebarMenuButtonVariants> { // Reusing variants for consistency, can be simpler if needed
+  size?: "sm" | "md";
+  isActive?: boolean;
+}
+
 const SidebarMenuSubButton = React.forwardRef<
   HTMLAnchorElement,
-  React.ComponentProps<"a"> & {
-    asChild?: boolean
-    size?: "sm" | "md"
-    isActive?: boolean
-  }
->(({ asChild = false, size = "md", isActive, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : "a"
+  SidebarMenuSubButtonProps
+>(({ size = "md", isActive, className, children, ...restProps }, ref) => {
+  const Comp = "a";
+
+  const elementProps = { ...restProps };
+  delete elementProps.asChild;
+  delete (elementProps as any).aschild;
 
   return (
     <Comp
@@ -723,8 +726,10 @@ const SidebarMenuSubButton = React.forwardRef<
         "group-data-[collapsible=icon]:hidden",
         className
       )}
-      {...props}
-    />
+      {...elementProps}
+    >
+      {children}
+    </Comp>
   )
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
@@ -755,5 +760,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
