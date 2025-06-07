@@ -1,9 +1,33 @@
 
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Zap, PlusCircle, Play, Settings2, ListFilter, Clock, ShieldCheck, Bell } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Zap, PlusCircle, Play, Settings2, ListFilter, Clock, Bell, FileJson, FileText, Grid2X2 } from "lucide-react";
+import { useState } from "react";
 
 export default function AutomationsPage() {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  const handleStartFromBlank = () => {
+    console.log("User chose to start from blank. Drag-and-drop canvas to be implemented.");
+    setIsCreateDialogOpen(false);
+    // Future: Navigate to a blank canvas page or open a specific UI for drag-and-drop
+  };
+
+  const handleUseTemplate = () => {
+    console.log("User chose to use a template. Template selection UI to be implemented.");
+    setIsCreateDialogOpen(false);
+    // Future: Show template selection UI
+  };
+
+  const handleImportFromJson = () => {
+    console.log("User chose to import from JSON. File upload UI to be implemented.");
+    setIsCreateDialogOpen(false);
+    // Future: Show file import UI
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
@@ -12,7 +36,53 @@ export default function AutomationsPage() {
         </h1>
         <div className="flex items-center gap-2">
           <Button variant="outline"><Settings2 className="mr-2 h-4 w-4" /> Automation Settings</Button>
-          <Button><PlusCircle className="mr-2 h-5 w-5" /> New Automation Rule</Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button><PlusCircle className="mr-2 h-5 w-5" /> Create New Automation</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Create New Automation</DialogTitle>
+                <DialogDescription>
+                  How would you like to start building your new automation?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 gap-4 py-4">
+                <Button variant="outline" className="h-auto py-4 flex-col items-start" onClick={handleUseTemplate}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText className="h-5 w-5" />
+                    <span className="font-semibold">Use a template</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-left">
+                    Browse pre-built automation templates for common scenarios.
+                  </p>
+                </Button>
+                <Button variant="outline" className="h-auto py-4 flex-col items-start" onClick={handleImportFromJson}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileJson className="h-5 w-5" />
+                    <span className="font-semibold">Import from JSON file</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-left">
+                    Upload an existing automation workflow from a JSON file.
+                  </p>
+                </Button>
+                <Button variant="outline" className="h-auto py-4 flex-col items-start" onClick={handleStartFromBlank}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Grid2X2 className="h-5 w-5" />
+                    <span className="font-semibold">Start from blank</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-left">
+                    Build your automation from scratch using a drag & drop canvas.
+                  </p>
+                </Button>
+              </div>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="ghost">Cancel</Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -72,7 +142,6 @@ export default function AutomationsPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder for a list or board of existing automations */}
       <Card className="shadow-lg">
         <CardHeader>
             <CardTitle>Your Automation Rules</CardTitle>
@@ -82,9 +151,8 @@ export default function AutomationsPage() {
             <div className="text-center py-10 text-muted-foreground">
                 <Zap className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p>No automation rules configured yet.</p>
-                <Button className="mt-4" size="sm">Create your first automation</Button>
+                <Button className="mt-4" size="sm" onClick={() => setIsCreateDialogOpen(true)}>Create your first automation</Button>
             </div>
-            {/* Future: Table or Kanban board of automations */}
         </CardContent>
       </Card>
     </div>
