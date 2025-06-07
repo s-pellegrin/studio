@@ -9,6 +9,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { Slot } from '@radix-ui/react-slot'; // Import Slot
 
 import {
   SidebarMenu,
@@ -65,7 +66,15 @@ interface NavigationMenuClientProps {
 export default function NavigationMenuClient({ navItems }: NavigationMenuClientProps) {
   const pathname = usePathname();
   const { state: sidebarState, isMobile } = useSidebar();
-  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>(() => {
+    const initialOpen: Record<string, boolean> = {};
+    navItems.forEach(item => {
+      if (item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href))) {
+        initialOpen[item.label] = true;
+      }
+    });
+    return initialOpen;
+  });
 
   const toggleSubMenu = (label: string) => {
     setOpenSubMenus(prev => ({ ...prev, [label]: !prev[label] }));
@@ -75,11 +84,10 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
     <SidebarMenu>
       {navItems.map((item) => {
         const IconComponent = iconMap[item.iconName];
-        const isSubMenuOpen = openSubMenus[item.label] || false;
-
+        
         if (item.subItems) {
           const isAnySubItemActive = item.subItems.some(sub => pathname.startsWith(sub.href));
-          // Parent of a sub-menu is a button, not a link
+          const isSubMenuOpen = openSubMenus[item.label] || false;
           return (
             <SidebarMenuItem key={item.label}>
               <TooltipProvider delayDuration={0}>
@@ -90,7 +98,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                       isActive={isAnySubItemActive}
                       onClick={() => toggleSubMenu(item.label)}
                       aria-expanded={isSubMenuOpen}
-                      // No href here, it acts as a button
+                      // This button does not link, it toggles
                     >
                       <div className="flex items-center gap-2">
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
@@ -118,9 +126,11 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
                       <Link href={subItem.href} asChild>
-                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                          <span>{subItem.label}</span>
-                        </SidebarMenuSubButton>
+                        <Slot> {/* Wrap SidebarMenuSubButton with Slot */}
+                          <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                            <span>{subItem.label}</span>
+                          </SidebarMenuSubButton>
+                        </Slot>
                       </Link>
                     </SidebarMenuSubItem>
                   ))}
@@ -138,13 +148,15 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
                       <Link href={item.href || '#'} asChild>
-                        <SidebarMenuButton
-                          className="justify-start"
-                          isActive={isActive}
-                        >
-                          {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
+                        <Slot> {/* Wrap SidebarMenuButton with Slot */}
+                          <SidebarMenuButton
+                            className="justify-start"
+                            isActive={isActive}
+                          >
+                            {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </Slot>
                       </Link>
                     </span>
                   </TooltipTrigger>
