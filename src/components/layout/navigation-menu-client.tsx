@@ -2,6 +2,10 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard, Home, FileText, Users, DollarSign, Wrench,
+  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -11,10 +15,27 @@ import {
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
 
+// Define a map for icon names to components
+const iconMap: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Home,
+  FileText,
+  Users,
+  DollarSign,
+  Wrench,
+  ListChecks,
+  MessageSquare,
+  Folder,
+  BarChart2,
+  PieChart,
+  Building,
+  Brain,
+};
+
 interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  iconName: string; // Changed from icon: LucideIcon
 }
 
 interface NavigationMenuClientProps {
@@ -27,8 +48,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
   return (
     <SidebarMenu>
       {navItems.map((item) => {
-        const Icon = item.icon;
-        // Ensure active state is correctly determined, especially for the root path.
+        const IconComponent = iconMap[item.iconName];
         const isActive = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
         
         return (
@@ -39,7 +59,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                 className="justify-start"
                 isActive={isActive}
               >
-                <Icon className="h-5 w-5" />
+                {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />} {/* Render icon or placeholder */}
                 <span>{item.label}</span>
               </SidebarMenuButton>
             </Link>

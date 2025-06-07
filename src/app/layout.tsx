@@ -24,7 +24,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import {
-  SidebarProvider,
+  SidebarProvider, // Corrected import
   Sidebar,
   SidebarHeader,
   SidebarContent,
@@ -55,21 +55,22 @@ export const metadata: Metadata = {
   description: 'Modern Property Management System',
 };
 
+// Changed icon to be a string name
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/rentals', label: 'Rentals', icon: Home },
-  { href: '/leasing', label: 'Leasing', icon: FileText },
-  { href: '/associations', label: 'Associations', icon: Users },
-  { href: '/accounting', label: 'Accounting', icon: DollarSign },
-  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { href: '/tasks', label: 'Tasks', icon: ListChecks },
-  { href: '/communication', label: 'Communication', icon: MessageSquare },
-  { href: '/files', label: 'Files', icon: Folder },
-  { href: '/reports', label: 'Reports', icon: BarChart2 },
-  { href: '/analytics', label: 'Analytics Hub', icon: PieChart },
-  { href: '/tenants', label: 'Tenant Browser', icon: Users },
-  { href: '/properties', label: 'Property Browser', icon: Building },
-  { href: '/ai-agent', label: 'AI Agent', icon: Brain },
+  { href: '/', label: 'Dashboard', iconName: 'LayoutDashboard' },
+  { href: '/rentals', label: 'Rentals', iconName: 'Home' },
+  { href: '/leasing', label: 'Leasing', iconName: 'FileText' },
+  { href: '/associations', label: 'Associations', iconName: 'Users' },
+  { href: '/accounting', label: 'Accounting', iconName: 'DollarSign' },
+  { href: '/maintenance', label: 'Maintenance', iconName: 'Wrench' },
+  { href: '/tasks', label: 'Tasks', iconName: 'ListChecks' },
+  { href: '/communication', label: 'Communication', iconName: 'MessageSquare' },
+  { href: '/files', label: 'Files', iconName: 'Folder' },
+  { href: '/reports', label: 'Reports', iconName: 'BarChart2' },
+  { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
+  { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
+  { href: '/properties', label: 'Property Browser', iconName: 'Building' },
+  { href: '/ai-agent', label: 'AI Agent', iconName: 'Brain' },
 ];
 
 export default function RootLayout({
@@ -121,7 +122,7 @@ export default function RootLayout({
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                       <Avatar className="h-9 w-9">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
+                        <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar"/>
                         <AvatarFallback>MM</AvatarFallback>
                       </Avatar>
                     </Button>
