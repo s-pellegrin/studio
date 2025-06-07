@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'next';
+import { useState, useMemo, useEffect } from 'react'; // Changed 'next' to 'react'
 import Link from 'next/link';
 import {
   Table,
@@ -330,3 +330,4 @@ export default function MaintenancePage() {
     </div>
   );
 }
+
