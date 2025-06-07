@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,7 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, BedDouble, Bath, PlusCircle, DollarSign } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Search, MapPin, BedDouble, Bath, PlusCircle, DollarSign, FileUp, FileDown, ChevronDown } from 'lucide-react';
 
 interface Property {
   id: string;
@@ -22,6 +31,7 @@ interface Property {
   status: 'Available' | 'Leased' | 'Pending';
   imageUrl: string;
   sqft: number;
+  'data-ai-hint'?: string;
 }
 
 const initialProperties: Property[] = [
@@ -72,11 +82,37 @@ const PropertyBrowserPage: NextPage = () => {
     <div className="container mx-auto py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">Property Listings</h1>
-        <Link href="/properties/new" passHref>
-          <Button>
-            <PlusCircle className="mr-2 h-5 w-5" /> Add New Property
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileUp className="mr-2 h-4 w-4" /> Import <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Import CSV file</DropdownMenuItem>
+              <DropdownMenuItem>Import Google Sheet</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileDown className="mr-2 h-4 w-4" /> Export <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Export as CSV</DropdownMenuItem>
+              <DropdownMenuItem>Export to Google Sheet</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Link href="/properties/new" passHref>
+            <Button>
+              <PlusCircle className="mr-2 h-5 w-5" /> Add New Property
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="mb-6 p-4 border rounded-lg shadow bg-card">
@@ -172,3 +208,4 @@ const PropertyBrowserPage: NextPage = () => {
 };
 
 export default PropertyBrowserPage;
+
