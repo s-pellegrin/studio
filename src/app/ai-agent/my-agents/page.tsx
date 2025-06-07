@@ -203,18 +203,7 @@ export default function MyAgentsPage() {
       <div className="bg-card rounded-lg shadow overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-10"></TableHead> {/* Chevron */}
-              <TableHead className="w-10"></TableHead> {/* Agent Icon */}
-              <TableHead>Agent name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Tools</TableHead>
-              <TableHead>Last run</TableHead>
-              <TableHead>Last modified <ArrowUpDown className="inline-block ml-1 h-3 w-3" /></TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Tasks done</TableHead>
-              <TableHead className="w-12"></TableHead> {/* Actions */}
-            </TableRow>
+            <TableRow><TableHead className="w-10"></TableHead><TableHead className="w-10"></TableHead><TableHead>Agent name</TableHead><TableHead>Description</TableHead><TableHead>Tools</TableHead><TableHead>Last run</TableHead><TableHead>Last modified <ArrowUpDown className="inline-block ml-1 h-3 w-3" /></TableHead><TableHead>Created</TableHead><TableHead className="text-right">Tasks done</TableHead><TableHead className="w-12"></TableHead></TableRow>
           </TableHeader>
           <TableBody>
             {filteredAgents.length > 0 ? (
