@@ -21,6 +21,7 @@ import {
   Languages,
   Zap,
   Search, // Added Search icon
+  Rocket, // Added Rocket icon
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -112,12 +113,12 @@ export default function RootLayout({
              <NavigationMenuClient navItems={navItems} />
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/settings" passHref asChild>
+              <Link href="/upgrade" passHref legacyBehavior>
                 <SidebarMenuButton
                   className="justify-start"
                 >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
+                  <Rocket className="h-5 w-5" />
+                  <span>Upgrade</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarFooter>

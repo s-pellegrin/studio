@@ -4,12 +4,12 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, Home, FileText, Users, DollarSign, Wrench,
-  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown, Zap
+  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown, Zap, Rocket
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-// import { Slot } from '@radix-ui/react-slot'; // Slot is removed
+import { Slot } from '@radix-ui/react-slot'; 
 
 import {
   SidebarMenu,
@@ -44,6 +44,7 @@ const iconMap: Record<string, LucideIcon> = {
   Brain,
   ChevronDown,
   Zap,
+  Rocket, // Added Rocket icon
 };
 
 interface NavSubItem {
@@ -89,6 +90,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                       isActive={isAnySubItemActive}
                       onClick={() => toggleSubMenu(item.label)}
                       aria-expanded={isSubMenuOpen}
+                      // For non-link buttons, we don't use <a>, so no 'href' or 'asChild'
                     >
                       <div className="flex items-center gap-2">
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
@@ -116,9 +118,11 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
                       <Link href={subItem.href} asChild>
-                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
-                          <span>{subItem.label}</span>
-                        </SidebarMenuSubButton>
+                        <Slot>
+                          <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                            <span>{subItem.label}</span>
+                          </SidebarMenuSubButton>
+                        </Slot>
                       </Link>
                     </SidebarMenuSubItem>
                   ))}
@@ -136,14 +140,15 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                     {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
                     <span>
                       <Link href={item.href || '#'} asChild>
-                        {/* SidebarMenuButton is now the direct child of Link asChild */}
-                        <SidebarMenuButton
-                          className="justify-start"
-                          isActive={isActive}
-                        >
-                          {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
+                        <Slot> {/* Wrap SidebarMenuButton with Slot */}
+                          <SidebarMenuButton
+                            className="justify-start"
+                            isActive={isActive}
+                          >
+                            {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                        </Slot>
                       </Link>
                     </span>
                   </TooltipTrigger>
