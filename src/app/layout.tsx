@@ -19,7 +19,8 @@ import {
   Bell,
   UserCircle,
   Languages,
-  Zap, // Added Zap
+  Zap,
+  Search, // Added Search icon
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -49,6 +50,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import AppLogo from '@/components/layout/app-logo';
 import NavigationMenuClient from '@/components/layout/navigation-menu-client';
+import { Input } from '@/components/ui/input'; // Added Input import
 
 
 export const metadata: Metadata = {
@@ -72,7 +74,7 @@ const navItems = [
   { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
   { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
   { href: '/properties', label: 'Property Browser', iconName: 'Building' },
-  { href: '/automations', label: 'Automations', iconName: 'Zap' }, // Added Automations
+  { href: '/automations', label: 'Automations', iconName: 'Zap' },
   {
     label: 'AI Agent',
     iconName: 'Brain',
@@ -122,10 +124,23 @@ export default function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center">
                 <SidebarTrigger />
               </div>
-              <div className="flex items-center gap-4">
+
+              {/* Global Search Bar */}
+              <div className="flex-1 flex justify-center px-2 sm:px-4">
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search anything..."
+                    className="w-full pl-10 h-10 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-4">
                 <Button variant="ghost" size="icon" aria-label="Notifications">
                   <Bell className="h-5 w-5" />
                 </Button>
