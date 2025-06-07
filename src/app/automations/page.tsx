@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Zap, PlusCircle, Play, Settings2, ListFilter, Clock, Bell, FileJson, FileText, Grid2X2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from 'next/navigation'; // Added useRouter
 
 export default function AutomationsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const router = useRouter(); // Initialized useRouter
 
   const handleStartFromBlank = () => {
-    console.log("User chose to start from blank. Drag-and-drop canvas to be implemented.");
+    console.log("User chose to start from blank. Navigating to drag-and-drop canvas.");
     setIsCreateDialogOpen(false);
-    // Future: Navigate to a blank canvas page or open a specific UI for drag-and-drop
+    router.push('/automations/new/blank'); // Navigate to the new blank canvas page
   };
 
   const handleUseTemplate = () => {
