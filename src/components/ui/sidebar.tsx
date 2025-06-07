@@ -542,66 +542,40 @@ const sidebarMenuButtonVariants = cva(
 
 const SidebarMenuButton = React.forwardRef<
   HTMLAnchorElement,
-  React.ComponentProps<"a"> & {
-    asChild?: boolean; // Prop for SidebarMenuButton's own child handling, not directly for Link's asChild
+  React.ComponentProps<'a'> & {
+    asChild?: boolean;
     isActive?: boolean;
-    tooltip?: string | Omit<React.ComponentProps<typeof TooltipContent>, 'children'> & { children: React.ReactNode };
+    // Tooltip prop removed
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
     {
-      asChild: ownAsChild = false, // Determines if SidebarMenuButton renders Slot or 'a'
+      asChild: ownAsChild = false,
       isActive = false,
       variant = "default",
       size = "default",
-      tooltip,
       className,
       children,
-      // Capture potential 'asChild' prop passed from a parent <Link asChild>
-      // and prevent it from being spread onto the intrinsic <a> element.
-      asChild: _forwardedAsChild, // We name it differently to avoid conflict
-      ...props // Contains href, onClick etc. from Link or direct invocation
+      // Destructure `asChild` from props to ensure it's not spread onto the intrinsic element
+      asChild: _forwardedAsChild, 
+      ...props // Remaining props from Link (href, onClick, etc.)
     },
     ref
   ) => {
-    // If ownAsChild is true, SidebarMenuButton renders a Slot.
-    // If ownAsChild is false (default), SidebarMenuButton renders an 'a'.
-    // When used with <Link asChild>, Link passes its props (like href)
-    // and SidebarMenuButton (with ownAsChild=false) renders the actual <a> tag.
-    const Comp = ownAsChild ? Slot : "a";
+    const Comp = ownAsChild ? Slot : "a"; 
 
-    let interactiveElement = (
+    return (
       <Comp
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props} // Spread relevant props (href, onClick, etc.)
-                  // The problematic `asChild` from Link should not be in `props` if handled correctly by Link.
-                  // However, to be absolutely safe, we've captured it as `_forwardedAsChild` and it's not spread here.
+        {...props} // Spread the cleaned props (without asChild from Link)
       >
         {children}
       </Comp>
     );
-
-    if (tooltip) {
-      const { isMobile, state } = useSidebar();
-      const tooltipContentProps = typeof tooltip === 'object' ? tooltip : { children: tooltip };
-      
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>{interactiveElement}</TooltipTrigger>
-          <TooltipContent
-            side="right"
-            align="center"
-            hidden={(state !== "collapsed" && state !== undefined) || isMobile}
-            {...tooltipContentProps}
-          />
-        </Tooltip>
-      );
-    }
-    return interactiveElement;
   }
 );
 SidebarMenuButton.displayName = "SidebarMenuButton";
@@ -772,6 +746,5 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
+  useSidebar, // Make sure useSidebar is exported
 }
-

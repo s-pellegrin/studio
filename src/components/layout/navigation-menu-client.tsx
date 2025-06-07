@@ -13,7 +13,14 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar, // Import useSidebar
 } from '@/components/ui/sidebar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Define a map for icon names to components
 const iconMap: Record<string, LucideIcon> = {
@@ -35,7 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
 interface NavItem {
   href: string;
   label: string;
-  iconName: string; // Changed from icon: LucideIcon
+  iconName: string; 
 }
 
 interface NavigationMenuClientProps {
@@ -44,6 +51,7 @@ interface NavigationMenuClientProps {
 
 export default function NavigationMenuClient({ navItems }: NavigationMenuClientProps) {
   const pathname = usePathname();
+  const { state: sidebarState, isMobile } = useSidebar(); // Get sidebar state for tooltip visibility
 
   return (
     <SidebarMenu>
@@ -53,16 +61,29 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
         
         return (
           <SidebarMenuItem key={item.label}>
-            <Link href={item.href} passHref asChild>
-              <SidebarMenuButton
-                tooltip={{ children: item.label, side: 'right', className: 'ml-1' }}
-                className="justify-start"
-                isActive={isActive}
-              >
-                {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />} {/* Render icon or placeholder */}
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-            </Link>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href={item.href} asChild> {/* Removed passHref */}
+                    <SidebarMenuButton
+                      className="justify-start"
+                      isActive={isActive}
+                    >
+                      {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="right" 
+                  className="ml-1"
+                  // Show tooltip only when sidebar is collapsed AND not on mobile
+                  hidden={sidebarState === "expanded" || isMobile || sidebarState === undefined } 
+                >
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </SidebarMenuItem>
         );
       })}
