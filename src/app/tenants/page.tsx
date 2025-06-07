@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -11,25 +12,8 @@ import { Search, Filter, PlusCircle, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-
-interface Tenant {
-  id: string;
-  name: string;
-  property: string;
-  unit: string;
-  leaseEndDate: string;
-  rentStatus: 'Paid' | 'Overdue' | 'Pending';
-  contact: string;
-  email: string;
-}
-
-const initialTenants: Tenant[] = [
-  { id: '1', name: 'Alice Wonderland', property: 'Oakview Apartments', unit: '101', leaseEndDate: '2024-12-31', rentStatus: 'Paid', contact: '555-0101', email: 'alice@example.com' },
-  { id: '2', name: 'Bob The Builder', property: 'Willow Creek Homes', unit: 'Apt 3B', leaseEndDate: '2025-06-30', rentStatus: 'Overdue', contact: '555-0102', email: 'bob@example.com' },
-  { id: '3', name: 'Carol Danvers', property: 'Oakview Apartments', unit: '204', leaseEndDate: '2024-08-15', rentStatus: 'Paid', contact: '555-0103', email: 'carol@example.com' },
-  { id: '4', name: 'David Copperfield', property: 'Riverside Complex', unit: 'C-12', leaseEndDate: '2025-01-31', rentStatus: 'Pending', contact: '555-0104', email: 'david@example.com' },
-  { id: '5', name: 'Eve Harrington', property: 'Willow Creek Homes', unit: 'Unit 5', leaseEndDate: '2024-11-30', rentStatus: 'Paid', contact: '555-0105', email: 'eve@example.com' },
-];
+import type { Tenant } from './data'; // Import Tenant type
+import { initialTenants } from './data'; // Import initialTenants
 
 const TenantBrowserPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,7 +49,7 @@ const TenantBrowserPage: NextPage = () => {
   }, [searchTerm, filterProperty, filterRentStatus, tenants, mounted]);
 
   if (!mounted) {
-    return <div>Loading tenants...</div>; // Or a skeleton loader
+    return <div>Loading tenants...</div>; 
   }
 
   return (
@@ -123,7 +107,6 @@ const TenantBrowserPage: NextPage = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {/* Placeholder for column visibility toggles */}
               <DropdownMenuCheckboxItem checked>Name</DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked>Property</DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem checked>Unit</DropdownMenuCheckboxItem>

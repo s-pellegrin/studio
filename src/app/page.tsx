@@ -1,3 +1,4 @@
+
 import {
   CircleDollarSign,
   Wrench,
@@ -14,45 +15,86 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Placeholder data
+import { initialTenants } from './tenants/data';
+import { initialMaintenanceRequests } from './maintenance/data';
+import { initialTasks } from './tasks/data';
+import { initialVendorPolicies } from './associations/data';
+
+// Helper function to check if a date string (YYYY-MM-DD) is within the next N days
+const isWithinNextNDays = (dateStr: string, days: number): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
+  const targetDate = new Date(dateStr);
+  const NDaysFromToday = new Date(today);
+  NDaysFromToday.setDate(today.getDate() + days);
+  return targetDate >= today && targetDate <= NDaysFromToday;
+};
+
+// Helper function to check if a date string (YYYY-MM-DD) is in the past
+const isPastDate = (dateStr: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const targetDate = new Date(dateStr);
+  return targetDate < today;
+};
+
+// Calculate dynamic data
+const outstandingBalancesCount = initialTenants.filter(t => t.rentStatus === 'Overdue').length;
+
+const newMaintenanceRequests = initialMaintenanceRequests.filter(m => m.status === 'New');
+const newMaintenanceRequestsCount = newMaintenanceRequests.length;
+const urgentMaintenanceRequestsCount = newMaintenanceRequests.filter(m => m.priority === 'Urgent').length;
+const routineMaintenanceRequestsCount = newMaintenanceRequests.filter(m => m.priority === 'Routine' || m.priority === 'High' || m.priority === 'Low').length; // Assuming High and Low also count as routine for this summary
+
+const overdueTasks = initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed');
+const overdueTasksCount = overdueTasks.length;
+const highPriorityOverdueTasksCount = overdueTasks.filter(t => t.priority === 'High').length;
+
+const expiringLeasesCount = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 30)).length;
+
+const activeInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Active').length;
+const lapsedInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Lapsed').length;
+const totalTenantsForInsuranceCalc = initialTenants.length > 0 ? initialTenants.length : 1; // Avoid division by zero
+const insuranceCoveragePercentage = Math.round((activeInsuranceCount / totalTenantsForInsuranceCalc) * 100);
+
+const expiringVendorPoliciesCount = initialVendorPolicies.filter(p => isWithinNextNDays(p.expiryDate, 30)).length;
+
+
 const dashboardData = {
   outstandingBalances: {
-    value: '$12,560',
-    description: '+5.2% from last month',
-    count: 15,
+    value: `$${(outstandingBalancesCount * 1250).toLocaleString()}`, // Placeholder average rent
+    description: `${outstandingBalancesCount} tenants with overdue rent`,
+    count: outstandingBalancesCount,
   },
   maintenanceRequests: {
-    value: '8 New',
-    description: '3 Urgent, 5 Routine',
-    count: 8,
+    value: `${newMaintenanceRequestsCount} New`,
+    description: `${urgentMaintenanceRequestsCount} Urgent, ${routineMaintenanceRequestsCount} Routine`,
+    count: newMaintenanceRequestsCount,
   },
   overdueTasks: {
-    value: '5 Tasks',
-    description: '2 High Priority',
-    count: 5,
+    value: `${overdueTasksCount} Tasks`,
+    description: `${highPriorityOverdueTasksCount} High Priority`,
+    count: overdueTasksCount,
   },
   expiringLeases: {
-    value: '12 Leases',
-    description: 'Within next 30 days',
-    count: 12,
+    value: `${expiringLeasesCount} Leases`,
+    description: 'Expiring in next 30 days',
+    count: expiringLeasesCount,
   },
   rentersInsurance: {
-    active: 125,
-    lapsed: 10,
-    total: 135,
+    active: activeInsuranceCount,
+    lapsed: lapsedInsuranceCount,
+    total: initialTenants.length, // Total tenants for context
+    coveragePercentage: insuranceCoveragePercentage,
   },
   expiringPolicies: {
-    value: '3 Policies',
+    value: `${expiringVendorPoliciesCount} Policies`,
     description: 'Vendor insurance expiring soon',
-    count: 3,
+    count: expiringVendorPoliciesCount,
   },
 };
 
 export default function DashboardPage() {
-  const insuranceCoverage = Math.round(
-    (dashboardData.rentersInsurance.active / dashboardData.rentersInsurance.total) * 100
-  );
-
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
@@ -60,7 +102,7 @@ export default function DashboardPage() {
         <WidgetCard
           title="Outstanding Balances"
           value={dashboardData.outstandingBalances.value}
-          description={`${dashboardData.outstandingBalances.count} tenants`}
+          description={dashboardData.outstandingBalances.description}
           icon={CircleDollarSign}
           action={
             <Link href="/accounting?filter=outstanding" passHref>
@@ -102,7 +144,7 @@ export default function DashboardPage() {
           description={dashboardData.expiringLeases.description}
           icon={FileClock}
           action={
-            <Link href="/leasing?filter=expiring" passHref>
+            <Link href="/tenants?filter=expiring-leases" passHref>
               <Button variant="outline" size="sm" className="w-full">
                 Review Leases <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -111,11 +153,11 @@ export default function DashboardPage() {
         />
         <WidgetCard
           title="Renters Insurance Status"
-          value={`${insuranceCoverage}% Coverage`}
+          value={`${dashboardData.rentersInsurance.coveragePercentage}% Coverage`}
           icon={ShieldCheck}
-          description={`${dashboardData.rentersInsurance.lapsed} policies lapsed`}
+          description={`${dashboardData.rentersInsurance.lapsed} policies lapsed of ${dashboardData.rentersInsurance.total} tenants`}
         >
-          <Progress value={insuranceCoverage} className="mt-2 h-2" />
+          <Progress value={dashboardData.rentersInsurance.coveragePercentage} className="mt-2 h-2" />
            <Link href="/tenants?filter=insurance" passHref className="mt-4 block">
               <Button variant="outline" size="sm" className="w-full">
                 View Insurance <ArrowRight className="ml-2 h-4 w-4" />
@@ -123,7 +165,7 @@ export default function DashboardPage() {
             </Link>
         </WidgetCard>
          <WidgetCard
-          title="Expiring Policies"
+          title="Expiring Vendor Policies"
           value={dashboardData.expiringPolicies.value}
           description={dashboardData.expiringPolicies.description}
           icon={ShieldAlert}
