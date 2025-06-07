@@ -4,7 +4,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, Home, FileText, Users, DollarSign, Wrench,
-  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown, Zap // Added Zap
+  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown, Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,7 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
   Building,
   Brain,
   ChevronDown,
-  Zap, // Added Zap
+  Zap,
 };
 
 interface NavSubItem {
@@ -51,7 +51,7 @@ interface NavSubItem {
 }
 
 interface NavItem {
-  href?: string; // Optional: if it has subItems, href might be omitted
+  href?: string;
   label: string;
   iconName: string;
   subItems?: NavSubItem[];
@@ -83,12 +83,12 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    {/* For parent items with sub-menus, SidebarMenuButton acts as a trigger */}
                     <SidebarMenuButton
                       className="justify-between w-full"
                       isActive={isAnySubItemActive}
                       onClick={() => toggleSubMenu(item.label)}
                       aria-expanded={isSubMenuOpen}
+                      // This button acts as a trigger, not a link itself
                     >
                       <div className="flex items-center gap-2">
                         {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
@@ -111,11 +111,11 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              {isSubMenuOpen && !isMobile && sidebarState === 'expanded' && (
+              {isSubMenuOpen && (sidebarState === "expanded" || isMobile) && (
                 <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
                   {item.subItems.map(subItem => (
                     <SidebarMenuSubItem key={subItem.label}>
-                      <Link href={subItem.href} asChild>
+                      <Link href={subItem.href} passHref legacyBehavior={false} asChild>
                         <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                           <span>{subItem.label}</span>
                         </SidebarMenuSubButton>
@@ -127,22 +127,24 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
             </SidebarMenuItem>
           );
         } else {
-          // Original rendering for items without sub-menus
           const isActive = item.href === '/' ? pathname === item.href : (item.href ? pathname.startsWith(item.href) : false);
           return (
             <SidebarMenuItem key={item.label}>
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Link href={item.href || '#'} asChild>
-                      <SidebarMenuButton
-                        className="justify-start"
-                        isActive={isActive}
-                      >
-                        {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </Link>
+                    {/* Wrap Link in a span to isolate it from TooltipTrigger's asChild */}
+                    <span>
+                      <Link href={item.href || '#'} asChild>
+                        <SidebarMenuButton
+                          className="justify-start"
+                          isActive={isActive}
+                        >
+                          {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </Link>
+                    </span>
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
