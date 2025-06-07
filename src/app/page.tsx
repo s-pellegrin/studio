@@ -38,6 +38,7 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
+import { format } from 'date-fns'; // Added import
 
 import type { Tenant } from './tenants/data';
 import { initialTenants } from './tenants/data';
@@ -116,10 +117,12 @@ export default function DashboardPage() {
       id: t.id,
       name: t.name,
       propertyUnit: `${t.property} - ${t.unit}`,
-      amount: 275, // Placeholder, as individual overdue amounts are not in data
+      amount: t.rentAmount || 275, // Using rentAmount if available, otherwise placeholder
       currency: 'HK$'
     }));
-  const totalOutstandingBalance = outstandingBalancesData.reduce((sum, item) => sum + item.amount, 0);
+  const totalOutstandingBalance = initialTenants
+    .filter(t => t.rentStatus === 'Overdue')
+    .reduce((sum, item) => sum + (item.rentAmount || 0), 0);
   const totalOverdueTenants = initialTenants.filter(t => t.rentStatus === 'Overdue').length;
 
   // Tasks (Incoming Maintenance Requests)
@@ -148,7 +151,7 @@ export default function DashboardPage() {
     { name: 'Uninsured', value: uninsuredTenants, fill: 'hsl(var(--destructive))' },
   ];
   // Mock for MSI/Third party breakdown for legend
-  const msiPolicyCount = 0; 
+  const msiPolicyCount = initialTenants.filter(t => t.insuranceStatus === 'Active').length; // Simplified for now
   const thirdPartyPolicyCount = 0;
 
 
@@ -159,7 +162,7 @@ export default function DashboardPage() {
     .map(t => ({
       id: t.id,
       title: t.description,
-      dueDate: new Date(t.dueDate).toLocaleDateString(),
+      dueDate: format(new Date(t.dueDate), 'MM/dd/yyyy'), // Consistent date formatting
       propertyUnit: t.relatedTo || 'N/A'
     }));
   const totalOverdueTasks = initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed').length;
@@ -170,20 +173,21 @@ export default function DashboardPage() {
   const expiringLeases60Days = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 60) && !isWithinNextNDays(t.leaseEndDate, 30)).length;
   const expiringLeases90Days = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 90) && !isWithinNextNDays(t.leaseEndDate, 60)).length;
   
-  // Placeholder data for the Expiring Leases chart categories as in the image
   const expiringLeasesChartData: ExpiringLeaseData[] = [
-    { name: 'Not started', value: expiringLeases30Days > 0 ? Math.max(1, Math.floor(expiringLeases30Days * 0.6)) : 0 }, // Mock distribution
-    { name: 'Offers', value: 0 },
-    { name: 'Renewals', value: 0 },
-    { name: 'Move-outs', value: 0 },
+    { name: 'Not started', value: expiringLeases30Days > 0 ? Math.max(1, Math.floor(expiringLeases30Days * 0.6)) : 0 }, 
+    { name: 'Offers', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.2)) : 0 }, // Mock distribution
+    { name: 'Renewals', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.1)) : 0 },
+    { name: 'Move-outs', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.1)) : 0 },
   ];
   const totalExpiringLeases = expiringLeases30Days + expiringLeases60Days + expiringLeases90Days;
 
 
   // Expiring Renters Insurance
   const lapsedInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Lapsed').length;
-  // For date-range tabs, we'd need expiry dates on insurance policies, which we don't have.
-  // So, tabs for date ranges will be placeholders for now.
+  // Placeholder counts for date ranges as we don't have insurance expiry dates
+  const expiringInsurance30Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 30)).length; // Mock: using lease end date for now
+  const expiringInsurance60Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 60) && !isWithinNextNDays(t.leaseEndDate, 30)).length;
+  const expiringInsurance90Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 90) && !isWithinNextNDays(t.leaseEndDate, 60)).length;
 
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--muted))', 'hsl(var(--destructive))', 'hsl(var(--accent))'];
@@ -357,13 +361,14 @@ export default function DashboardPage() {
                 )}
               </TabsContent>
               <TabsContent value="all-overdue">
-                {/* Display all overdue tasks - for simplicity, reusing the same filtered data for now */}
-                 {overdueTasksData.length > 0 ? (
+                 {initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed').length > 0 ? (
                   <div className="space-y-3">
-                    {overdueTasksData.map(task => (
+                    {initialTasks
+                      .filter(t => isPastDate(t.dueDate) && t.status !== 'Completed')
+                      .map(task => (
                        <div key={task.id} className="py-2 border-b last:border-b-0">
-                        <p className="font-medium text-sm text-primary hover:underline cursor-pointer">{task.title}</p>
-                        <p className="text-xs text-muted-foreground">{task.dueDate} | {task.propertyUnit}</p>
+                        <p className="font-medium text-sm text-primary hover:underline cursor-pointer">{task.description}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(task.dueDate), 'MM/dd/yyyy')} | {task.relatedTo || 'N/A'}</p>
                       </div>
                     ))}
                   </div>
@@ -374,7 +379,7 @@ export default function DashboardPage() {
             </Tabs>
           </CardContent>
            <CardFooter className="text-xs text-muted-foreground justify-between">
-            <span>Showing {overdueTasksData.length} of {totalOverdueTasks}</span>
+            <span>Showing {Math.min(overdueTasksData.length, 2)} of {totalOverdueTasks}</span>
              <Link href="/tasks?filter=overdue" className="text-primary hover:underline font-medium">
               View all +
             </Link>
@@ -389,18 +394,18 @@ export default function DashboardPage() {
           <CardContent>
              <Tabs defaultValue="0-30" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4 text-xs">
-                <TabsTrigger value="0-30" className="px-1">0 - 30 days</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-1">31 - 60 days</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-1">61 - 90 days</TabsTrigger>
-                <TabsTrigger value="all" className="px-1">All</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-1">0 - 30 days ({expiringLeases30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-1">31 - 60 days ({expiringLeases60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-1">61 - 90 days ({expiringLeases90Days})</TabsTrigger>
+                <TabsTrigger value="all" className="px-1">All ({totalExpiringLeases})</TabsTrigger>
               </TabsList>
               <TabsContent value="0-30">
-                <div className="w-full h-40"> {/* Height for chart */}
+                <div className="w-full h-40"> 
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={expiringLeasesChartData} layout="vertical" margin={{ top: 5, right: 20, left: 50, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} width={80} />
                       <Tooltip />
                       <Bar dataKey="value" fill="hsl(var(--accent))" barSize={20}>
                         {expiringLeasesChartData.map((entry, index) => (
@@ -410,16 +415,32 @@ export default function DashboardPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                 {expiringLeases30Days === 0 && <p className="text-center text-sm text-muted-foreground py-4">No leases expiring in 0-30 days.</p>}
               </TabsContent>
-               <TabsContent value="31-60"><p className="text-center text-sm text-muted-foreground py-4">Data for 31-60 days</p></TabsContent>
-               <TabsContent value="61-90"><p className="text-center text-sm text-muted-foreground py-4">Data for 61-90 days</p></TabsContent>
-               <TabsContent value="all"><p className="text-center text-sm text-muted-foreground py-4">All expiring leases data</p></TabsContent>
+               <TabsContent value="31-60">
+                {expiringLeases60Days > 0 ? 
+                  (<p className="text-center text-sm text-muted-foreground py-4">{expiringLeases60Days} leases expiring in 31-60 days. (Chart placeholder)</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No leases expiring in 31-60 days.</p>)
+                }
+               </TabsContent>
+               <TabsContent value="61-90">
+                {expiringLeases90Days > 0 ?
+                  (<p className="text-center text-sm text-muted-foreground py-4">{expiringLeases90Days} leases expiring in 61-90 days. (Chart placeholder)</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No leases expiring in 61-90 days.</p>)
+                }
+                </TabsContent>
+               <TabsContent value="all">
+                {totalExpiringLeases > 0 ?
+                  (<p className="text-center text-sm text-muted-foreground py-4">{totalExpiringLeases} total leases expiring. (Chart placeholder)</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No leases expiring.</p>)
+                }
+                </TabsContent>
             </Tabs>
           </CardContent>
           <CardFooter className="text-xs text-muted-foreground justify-between">
             <span>{totalExpiringLeases} leases</span>
             <Link href="/leasing?filter=expiring" className="text-primary hover:underline font-medium">
-              View all +
+              Go to Leasing +
             </Link>
           </CardFooter>
         </Card>
@@ -432,10 +453,10 @@ export default function DashboardPage() {
           <CardContent>
              <Tabs defaultValue="expired" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4 text-xs">
-                <TabsTrigger value="expired" className="px-1">Expired</TabsTrigger>
-                <TabsTrigger value="0-30" className="px-1">0 - 30 days</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-1">31 - 60 days</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-1">61 - 90 days</TabsTrigger>
+                <TabsTrigger value="expired" className="px-1">Expired ({lapsedInsuranceCount})</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-1">0 - 30 days ({expiringInsurance30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-1">31 - 60 days ({expiringInsurance60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-1">61 - 90 days ({expiringInsurance90Days})</TabsTrigger>
               </TabsList>
               <TabsContent value="expired">
                 {lapsedInsuranceCount > 0 ? (
@@ -444,9 +465,24 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground text-center py-4">There are no expired policies</p>
                 )}
               </TabsContent>
-              <TabsContent value="0-30"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 0-30 days.</p></TabsContent>
-              <TabsContent value="31-60"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 31-60 days.</p></TabsContent>
-              <TabsContent value="61-90"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 61-90 days.</p></TabsContent>
+              <TabsContent value="0-30">
+                {expiringInsurance30Days > 0 ?
+                  (<p className="text-center text-sm text-muted-foreground py-4">{expiringInsurance30Days} policies expiring in 0-30 days.</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 0-30 days.</p>)
+                }
+              </TabsContent>
+              <TabsContent value="31-60">
+                 {expiringInsurance60Days > 0 ?
+                  (<p className="text-center text-sm text-muted-foreground py-4">{expiringInsurance60Days} policies expiring in 31-60 days.</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 31-60 days.</p>)
+                }
+              </TabsContent>
+              <TabsContent value="61-90">
+                {expiringInsurance90Days > 0 ?
+                  (<p className="text-center text-sm text-muted-foreground py-4">{expiringInsurance90Days} policies expiring in 61-90 days.</p>) :
+                  (<p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 61-90 days.</p>)
+                }
+              </TabsContent>
             </Tabs>
           </CardContent>
            <CardFooter className="text-xs text-muted-foreground justify-end">
@@ -465,5 +501,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
