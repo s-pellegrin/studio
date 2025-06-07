@@ -47,7 +47,7 @@ export interface Agent { // Export Agent interface
   tasksDone: number;
 }
 
-const initialAgents: Agent[] = [
+export const initialAgents: Agent[] = [
   {
     id: '1',
     agentIconUrl: 'https://placehold.co/32x32.png',
