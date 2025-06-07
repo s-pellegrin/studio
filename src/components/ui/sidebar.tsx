@@ -22,7 +22,7 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "12rem" 
+const SIDEBAR_WIDTH = "12rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
@@ -68,7 +68,7 @@ const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
-    const isMobileHookValue = useIsMobile() 
+    const isMobileHookValue = useIsMobile()
     const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
     const [openMobile, setOpenMobile] = React.useState(false)
 
@@ -181,8 +181,8 @@ const Sidebar = React.forwardRef<
     ref
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
-    
-    if (collapsible === "none" && !isMobile) { 
+
+    if (collapsible === "none" && !isMobile) {
       return (
         <div
           className={cn(
@@ -196,9 +196,9 @@ const Sidebar = React.forwardRef<
         </div>
       )
     }
-    
-    if (isMobile === undefined && collapsible !== "none") { 
-        return null; 
+
+    if (isMobile === undefined && collapsible !== "none") {
+        return null;
     }
 
 
@@ -544,14 +544,12 @@ interface SidebarMenuButtonPropsInternal extends VariantProps<typeof sidebarMenu
   children?: React.ReactNode;
   className?: string;
   isActive?: boolean;
-  // This prop determines if SidebarMenuButton itself should render a <Slot>
-  renderAsSlot?: boolean; 
-  // Allow other props like href, onClick, and crucially, asChild from Link
-  [key: string]: any; 
+  renderAsSlot?: boolean;
+  [key: string]: any;
 }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLAnchorElement, 
+  HTMLAnchorElement,
   SidebarMenuButtonPropsInternal
 >(
   (
@@ -562,12 +560,16 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       className,
       children,
-      ...restProps 
+      ...restProps
     },
     ref
   ) => {
     const Comp = renderAsSlot ? Slot : "a";
-    const { asChild, ...elementProps } = restProps;
+
+    // Create a new object for props to be spread, explicitly deleting asChild and aschild
+    const elementProps = { ...restProps };
+    delete elementProps.asChild; // Remove camelCase version
+    delete (elementProps as any).aschild; // Remove lowercase version, casting to any to bypass strict TS check if not in type
 
     return (
       <Comp
@@ -576,7 +578,7 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        {...elementProps} 
+        {...elementProps}
       >
         {children}
       </Comp>
@@ -728,7 +730,7 @@ const SidebarMenuSubButton = React.forwardRef<
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
 export {
-  SidebarProvider, 
+  SidebarProvider,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -751,5 +753,7 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar, // Make sure useSidebar is exported
+  useSidebar,
 }
+
+    
