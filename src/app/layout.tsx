@@ -55,7 +55,8 @@ export const metadata: Metadata = {
   description: 'Modern Property Management System',
 };
 
-// Changed icon to be a string name
+// Updated NavItem type definition will be in NavigationMenuClient.tsx
+// This array structure will be interpreted by NavigationMenuClient.tsx
 const navItems = [
   { href: '/', label: 'Dashboard', iconName: 'LayoutDashboard' },
   { href: '/rentals', label: 'Rentals', iconName: 'Home' },
@@ -70,7 +71,15 @@ const navItems = [
   { href: '/analytics', label: 'Analytics Hub', iconName: 'PieChart' },
   { href: '/tenants', label: 'Tenant Browser', iconName: 'Users' },
   { href: '/properties', label: 'Property Browser', iconName: 'Building' },
-  { href: '/ai-agent', label: 'AI Agent', iconName: 'Brain' },
+  { 
+    label: 'AI Agent', 
+    iconName: 'Brain',
+    // No direct href, it's a category/trigger for sub-menu
+    subItems: [
+      { href: '/ai-agent/my-agents', label: 'My Agents' },
+      { href: '/ai-agent/knowledge-base', label: 'Knowledge Base' },
+    ]
+  },
 ];
 
 export default function RootLayout({
@@ -100,7 +109,6 @@ export default function RootLayout({
             <SidebarFooter className="p-4">
               <Link href="/settings" passHref asChild>
                 <SidebarMenuButton
-                  tooltip={{ children: 'Settings', side: 'right', className: 'ml-1' }}
                   className="justify-start"
                 >
                   <Settings className="h-5 w-5" />
@@ -112,7 +120,7 @@ export default function RootLayout({
           <SidebarInset>
             <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
               <div className="flex items-center gap-2">
-                <SidebarTrigger /> {/* Removed md:hidden to make it always visible */}
+                <SidebarTrigger /> 
               </div>
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" aria-label="Notifications">

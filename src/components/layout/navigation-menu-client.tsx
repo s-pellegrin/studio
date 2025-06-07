@@ -4,16 +4,20 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   LayoutDashboard, Home, FileText, Users, DollarSign, Wrench,
-  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain
+  ListChecks, MessageSquare, Folder, BarChart2, PieChart, Building, Brain, ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar, // Import useSidebar
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Tooltip,
@@ -21,8 +25,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
-// Define a map for icon names to components
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   Home,
@@ -37,12 +41,19 @@ const iconMap: Record<string, LucideIcon> = {
   PieChart,
   Building,
   Brain,
+  ChevronDown,
 };
 
-interface NavItem {
+interface NavSubItem {
   href: string;
   label: string;
-  iconName: string; 
+}
+
+interface NavItem {
+  href?: string; // Optional: if it has subItems, href might be omitted
+  label: string;
+  iconName: string;
+  subItems?: NavSubItem[];
 }
 
 interface NavigationMenuClientProps {
@@ -51,41 +62,99 @@ interface NavigationMenuClientProps {
 
 export default function NavigationMenuClient({ navItems }: NavigationMenuClientProps) {
   const pathname = usePathname();
-  const { state: sidebarState, isMobile } = useSidebar(); // Get sidebar state for tooltip visibility
+  const { state: sidebarState, isMobile } = useSidebar();
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
+
+  const toggleSubMenu = (label: string) => {
+    setOpenSubMenus(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <SidebarMenu>
       {navItems.map((item) => {
         const IconComponent = iconMap[item.iconName];
-        const isActive = item.href === '/' ? pathname === item.href : pathname.startsWith(item.href);
-        
-        return (
-          <SidebarMenuItem key={item.label}>
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link href={item.href} asChild> {/* Removed passHref */}
+        const isSubMenuOpen = openSubMenus[item.label] || false;
+
+        if (item.subItems) {
+          const isAnySubItemActive = item.subItems.some(sub => pathname.startsWith(sub.href));
+          return (
+            <SidebarMenuItem key={item.label}>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* For parent items with sub-menus, SidebarMenuButton acts as a trigger */}
                     <SidebarMenuButton
-                      className="justify-start"
-                      isActive={isActive}
+                      className="justify-between w-full"
+                      isActive={isAnySubItemActive}
+                      onClick={() => toggleSubMenu(item.label)}
+                      aria-expanded={isSubMenuOpen}
                     >
-                      {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                      <span>{item.label}</span>
+                      <div className="flex items-center gap-2">
+                        {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                        <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                      </div>
+                      <ChevronDown 
+                        className={cn(
+                          "h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden",
+                          isSubMenuOpen ? "rotate-180" : ""
+                        )}
+                      />
                     </SidebarMenuButton>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent 
-                  side="right" 
-                  className="ml-1"
-                  // Show tooltip only when sidebar is collapsed AND not on mobile
-                  hidden={sidebarState === "expanded" || isMobile || sidebarState === undefined } 
-                >
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </SidebarMenuItem>
-        );
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="ml-1"
+                    hidden={sidebarState === "expanded" || isMobile || sidebarState === undefined}
+                  >
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {isSubMenuOpen && (
+                <SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
+                  {item.subItems.map(subItem => (
+                    <SidebarMenuSubItem key={subItem.label}>
+                      <Link href={subItem.href} asChild>
+                        <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
+                          <span>{subItem.label}</span>
+                        </SidebarMenuSubButton>
+                      </Link>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              )}
+            </SidebarMenuItem>
+          );
+        } else {
+          // Original rendering for items without sub-menus
+          const isActive = item.href === '/' ? pathname === item.href : (item.href ? pathname.startsWith(item.href) : false);
+          return (
+            <SidebarMenuItem key={item.label}>
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href={item.href || '#'} asChild>
+                      <SidebarMenuButton
+                        className="justify-start"
+                        isActive={isActive}
+                      >
+                        {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="ml-1"
+                    hidden={sidebarState === "expanded" || isMobile || sidebarState === undefined}
+                  >
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </SidebarMenuItem>
+          );
+        }
       })}
     </SidebarMenu>
   );
