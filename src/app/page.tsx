@@ -1,4 +1,6 @@
 
+'use client';
+
 import {
   CircleDollarSign,
   Wrench,
@@ -7,30 +9,56 @@ import {
   ShieldCheck,
   ShieldAlert,
   ArrowRight,
+  Settings2,
+  MoreHorizontal,
+  Mail,
 } from 'lucide-react';
 import Link from 'next/link';
-import WidgetCard from '@/components/dashboard/widget-card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from 'recharts';
 
+import type { Tenant } from './tenants/data';
 import { initialTenants } from './tenants/data';
+import type { MaintenanceRequest } from './maintenance/data';
 import { initialMaintenanceRequests } from './maintenance/data';
+import type { Task } from './tasks/data';
 import { initialTasks } from './tasks/data';
+import type { VendorPolicy } from './associations/data';
 import { initialVendorPolicies } from './associations/data';
+import { useState, useEffect } from 'react';
 
-// Helper function to check if a date string (YYYY-MM-DD) is within the next N days
+
 const isWithinNextNDays = (dateStr: string, days: number): boolean => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to the start of the day
+  today.setHours(0, 0, 0, 0);
   const targetDate = new Date(dateStr);
   const NDaysFromToday = new Date(today);
   NDaysFromToday.setDate(today.getDate() + days);
   return targetDate >= today && targetDate <= NDaysFromToday;
 };
 
-// Helper function to check if a date string (YYYY-MM-DD) is in the past
 const isPastDate = (dateStr: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -38,192 +66,404 @@ const isPastDate = (dateStr: string): boolean => {
   return targetDate < today;
 };
 
-// Calculate dynamic data
-const outstandingBalancesCount = initialTenants.filter(t => t.rentStatus === 'Overdue').length;
+interface BalanceItem {
+  id: string;
+  name: string;
+  propertyUnit: string;
+  amount: number;
+  currency: string;
+}
 
-const newMaintenanceRequests = initialMaintenanceRequests.filter(m => m.status === 'New');
-const newMaintenanceRequestsCount = newMaintenanceRequests.length;
-const urgentMaintenanceRequestsCount = newMaintenanceRequests.filter(m => m.priority === 'Urgent').length;
-const routineMaintenanceRequestsCount = newMaintenanceRequests.filter(m => m.priority === 'Routine' || m.priority === 'High' || m.priority === 'Low').length; // Assuming High and Low also count as routine for this summary
+interface DashboardTaskItem {
+  id: string;
+  title: string;
+  age: string;
+  details: string;
+}
 
-const overdueTasks = initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed');
-const overdueTasksCount = overdueTasks.length;
-const highPriorityOverdueTasksCount = overdueTasks.filter(t => t.priority === 'High').length;
+interface OverdueTaskItem {
+  id: string;
+  title: string;
+  dueDate: string;
+  propertyUnit: string;
+}
 
-const expiringLeasesCount = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 30)).length;
+interface ExpiringLeaseData {
+  name: string;
+  value: number;
+}
 
-const activeInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Active').length;
-const lapsedInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Lapsed').length;
-const totalTenantsForInsuranceCalc = initialTenants.length > 0 ? initialTenants.length : 1; // Avoid division by zero
-const insuranceCoveragePercentage = Math.round((activeInsuranceCount / totalTenantsForInsuranceCalc) * 100);
-
-const expiringVendorPoliciesCount = initialVendorPolicies.filter(p => isWithinNextNDays(p.expiryDate, 30)).length;
-
-
-const dashboardData = {
-  outstandingBalances: {
-    value: `$${(outstandingBalancesCount * 1250).toLocaleString()}`, // Placeholder average rent
-    description: `${outstandingBalancesCount} tenants with overdue rent`,
-    count: outstandingBalancesCount,
-  },
-  maintenanceRequests: {
-    value: `${newMaintenanceRequestsCount} New`,
-    description: `${urgentMaintenanceRequestsCount} Urgent, ${routineMaintenanceRequestsCount} Routine`,
-    count: newMaintenanceRequestsCount,
-  },
-  overdueTasks: {
-    value: `${overdueTasksCount} Tasks`,
-    description: `${highPriorityOverdueTasksCount} High Priority`,
-    count: overdueTasksCount,
-  },
-  expiringLeases: {
-    value: `${expiringLeasesCount} Leases`,
-    description: 'Ending in next 30 days. Review for renewal or new listing.',
-    count: expiringLeasesCount,
-  },
-  rentersInsurance: {
-    active: activeInsuranceCount,
-    lapsed: lapsedInsuranceCount,
-    total: initialTenants.length, // Total tenants for context
-    coveragePercentage: insuranceCoveragePercentage,
-  },
-  expiringPolicies: {
-    value: `${expiringVendorPoliciesCount} Policies`,
-    description: 'Vendor insurance expiring soon',
-    count: expiringVendorPoliciesCount,
-  },
-};
 
 export default function DashboardPage() {
+  const [greeting, setGreeting] = useState('Good day');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreeting('Good morning');
+    } else if (hour < 18) {
+      setGreeting('Good afternoon');
+    } else {
+      setGreeting('Good evening');
+    }
+  }, []);
+
+  // Outstanding Balances
+  const outstandingBalancesData: BalanceItem[] = initialTenants
+    .filter(t => t.rentStatus === 'Overdue')
+    .slice(0, 5) // Show top 5
+    .map(t => ({
+      id: t.id,
+      name: t.name,
+      propertyUnit: `${t.property} - ${t.unit}`,
+      amount: 275, // Placeholder, as individual overdue amounts are not in data
+      currency: 'HK$'
+    }));
+  const totalOutstandingBalance = outstandingBalancesData.reduce((sum, item) => sum + item.amount, 0);
+  const totalOverdueTenants = initialTenants.filter(t => t.rentStatus === 'Overdue').length;
+
+  // Tasks (Incoming Maintenance Requests)
+  const incomingRequestsData: DashboardTaskItem[] = initialMaintenanceRequests
+    .filter(m => m.status === 'New' || m.status === 'In Progress')
+    .slice(0, 3) // Show top 3
+    .map(m => {
+      const reported = new Date(m.reportedDate);
+      const today = new Date();
+      const diffTime = Math.abs(today.getTime() - reported.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return {
+        id: m.id,
+        title: m.description,
+        age: `${diffDays} day${diffDays === 1 ? '' : 's'} ago`,
+        details: `Resident request | ${m.propertyId}${m.unitId ? ` - ${m.unitId}` : ''}`
+      };
+    });
+
+  // Renters Insurance
+  const totalTenants = initialTenants.length;
+  const insuredTenants = initialTenants.filter(t => t.insuranceStatus === 'Active').length;
+  const uninsuredTenants = totalTenants - insuredTenants;
+  const rentersInsuranceChartData = [
+    { name: 'Insured', value: insuredTenants, fill: 'hsl(var(--primary))' },
+    { name: 'Uninsured', value: uninsuredTenants, fill: 'hsl(var(--destructive))' },
+  ];
+  // Mock for MSI/Third party breakdown for legend
+  const msiPolicyCount = 0; 
+  const thirdPartyPolicyCount = 0;
+
+
+  // Overdue Tasks
+  const overdueTasksData: OverdueTaskItem[] = initialTasks
+    .filter(t => isPastDate(t.dueDate) && t.status !== 'Completed')
+    .slice(0, 2) // Show top 2
+    .map(t => ({
+      id: t.id,
+      title: t.description,
+      dueDate: new Date(t.dueDate).toLocaleDateString(),
+      propertyUnit: t.relatedTo || 'N/A'
+    }));
+  const totalOverdueTasks = initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed').length;
+
+
+  // Expiring Leases
+  const expiringLeases30Days = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 30)).length;
+  const expiringLeases60Days = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 60) && !isWithinNextNDays(t.leaseEndDate, 30)).length;
+  const expiringLeases90Days = initialTenants.filter(t => isWithinNextNDays(t.leaseEndDate, 90) && !isWithinNextNDays(t.leaseEndDate, 60)).length;
+  
+  // Placeholder data for the Expiring Leases chart categories as in the image
+  const expiringLeasesChartData: ExpiringLeaseData[] = [
+    { name: 'Not started', value: expiringLeases30Days > 0 ? Math.max(1, Math.floor(expiringLeases30Days * 0.6)) : 0 }, // Mock distribution
+    { name: 'Offers', value: 0 },
+    { name: 'Renewals', value: 0 },
+    { name: 'Move-outs', value: 0 },
+  ];
+  const totalExpiringLeases = expiringLeases30Days + expiringLeases60Days + expiringLeases90Days;
+
+
+  // Expiring Renters Insurance
+  const lapsedInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Lapsed').length;
+  // For date-range tabs, we'd need expiry dates on insurance policies, which we don't have.
+  // So, tabs for date ranges will be placeholders for now.
+
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--muted))', 'hsl(var(--destructive))', 'hsl(var(--accent))'];
+
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <WidgetCard
-          title="Outstanding Balances"
-          value={dashboardData.outstandingBalances.value}
-          description={dashboardData.outstandingBalances.description}
-          icon={CircleDollarSign}
-          action={
-            <Link href="/accounting?filter=outstanding" passHref>
-              <Button variant="outline" size="sm" className="w-full">
-                View Details <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          }
-        />
-        <WidgetCard
-          title="Incoming Maintenance"
-          value={dashboardData.maintenanceRequests.value}
-          description={dashboardData.maintenanceRequests.description}
-          icon={Wrench}
-           action={
-            <Link href="/maintenance?filter=new" passHref>
-              <Button variant="outline" size="sm" className="w-full">
-                Manage Requests <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          }
-        />
-        <WidgetCard
-          title="Overdue Tasks"
-          value={dashboardData.overdueTasks.value}
-          description={dashboardData.overdueTasks.description}
-          icon={ListChecks}
-          action={
-            <Link href="/tasks?filter=overdue" passHref>
-              <Button variant="destructive" size="sm" className="w-full">
-                Address Tasks <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          }
-        />
-        <WidgetCard
-          title="Expiring Leases"
-          value={dashboardData.expiringLeases.value}
-          description={dashboardData.expiringLeases.description}
-          icon={FileClock}
-          action={
-            <Link href="/leasing" passHref>
-              <Button variant="outline" size="sm" className="w-full">
-                Go to Leasing <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          }
-        />
-        <WidgetCard
-          title="Renters Insurance Status"
-          value={`${dashboardData.rentersInsurance.coveragePercentage}% Coverage`}
-          icon={ShieldCheck}
-          description={`${dashboardData.rentersInsurance.lapsed} policies lapsed of ${dashboardData.rentersInsurance.total} tenants`}
-        >
-          <Progress value={dashboardData.rentersInsurance.coveragePercentage} className="mt-2 h-2" />
-           <Link href="/tenants?filter=insurance" passHref className="mt-4 block">
-              <Button variant="outline" size="sm" className="w-full">
-                View Insurance <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-        </WidgetCard>
-         <WidgetCard
-          title="Expiring Vendor Policies"
-          value={dashboardData.expiringPolicies.value}
-          description={dashboardData.expiringPolicies.description}
-          icon={ShieldAlert}
-          action={
-            <Link href="/associations?filter=expiring-policies" passHref>
-              <Button variant="outline" size="sm" className="w-full">
-                Check Policies <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          }
-        />
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">{greeting}, user!</h1>
+        <Button variant="outline" size="sm">
+          <Settings2 className="mr-2 h-4 w-4" /> Customize dashboard
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-lg">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Outstanding Balances Card */}
+        <Card className="lg:col-span-1 shadow-lg">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest updates across your properties.</CardDescription>
+            <CardTitle>Outstanding Balances - Rentals</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-center justify-between text-sm">
-                <div>
-                  <p className="font-medium">New lease signed: Apt 4B, 123 Main St</p>
-                  <p className="text-xs text-muted-foreground">Tenant: John Doe</p>
+            <div className="text-3xl font-bold mb-1">HK${totalOutstandingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <p className="text-sm text-muted-foreground mb-4">Outstanding balances</p>
+            <div className="space-y-3">
+              {outstandingBalancesData.map((item) => (
+                <div key={item.id} className="flex justify-between items-center text-sm py-2 border-b last:border-b-0">
+                  <div>
+                    <p className="font-medium text-primary hover:underline cursor-pointer">{item.propertyUnit}</p>
+                  </div>
+                  <p>{item.currency}{item.amount.toFixed(2)}</p>
                 </div>
-                <Badge variant="secondary">Leasing</Badge>
-              </li>
-              <li className="flex items-center justify-between text-sm">
-                <div>
-                  <p className="font-medium">Maintenance request: #00124 - Leaky Faucet</p>
-                  <p className="text-xs text-muted-foreground">Property: 789 Oak Ave, Unit 12</p>
-                </div>
-                <Badge variant="default" className="bg-amber-500 text-white">Maintenance</Badge>
-              </li>
-              <li className="flex items-center justify-between text-sm">
-                <div>
-                  <p className="font-medium">Rent payment received: Unit 2C, 456 Pine Ln</p>
-                  <p className="text-xs text-muted-foreground">Amount: $1,200.00</p>
-                </div>
-                <Badge variant="default">Accounting</Badge>
-              </li>
-            </ul>
+              ))}
+            </div>
           </CardContent>
+          <CardFooter className="text-xs text-muted-foreground justify-between">
+            <span>Showing {Math.min(outstandingBalancesData.length, 5)} of {totalOverdueTenants}</span>
+            <Link href="/accounting?filter=outstanding" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
         </Card>
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Quick Links</CardTitle>
-            <CardDescription>Access common actions quickly.</CardDescription>
+
+        {/* Tasks Card */}
+        <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle>Tasks</CardTitle>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>View All Tasks</DropdownMenuItem>
+                <DropdownMenuItem>Create New Task</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <Link href="/tenants/new" passHref><Button className="w-full">Add New Tenant</Button></Link>
-            <Link href="/properties/new" passHref><Button className="w-full">Add New Property</Button></Link>
-            <Link href="/maintenance/new" passHref><Button className="w-full">Log Maintenance</Button></Link>
-            <Link href="/communication/compose" passHref><Button className="w-full">Send Announcement</Button></Link>
+          <CardContent>
+            <Tabs defaultValue="incoming" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="incoming">Incoming requests</TabsTrigger>
+                <TabsTrigger value="assigned">Assigned to me</TabsTrigger>
+              </TabsList>
+              <TabsContent value="incoming">
+                {incomingRequestsData.length > 0 ? (
+                  <div className="space-y-3">
+                    {incomingRequestsData.map(task => (
+                      <div key={task.id} className="py-2 border-b last:border-b-0">
+                        <p className="font-medium text-sm text-primary hover:underline cursor-pointer">{task.title}</p>
+                        <p className="text-xs text-muted-foreground">{task.age} | {task.details}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No incoming requests.</p>
+                )}
+              </TabsContent>
+              <TabsContent value="assigned">
+                 <p className="text-sm text-muted-foreground text-center py-4">No tasks assigned to you.</p>
+              </TabsContent>
+            </Tabs>
           </CardContent>
+           <CardFooter className="text-xs text-muted-foreground justify-between">
+            <span>Showing {incomingRequestsData.length} of {initialMaintenanceRequests.filter(m => m.status === 'New' || m.status === 'In Progress').length} in last month</span>
+            <Link href="/maintenance" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
         </Card>
+
+        {/* Renters Insurance Card */}
+        <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader>
+            <CardTitle>Renters Insurance</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <div className="w-full h-48 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={rentersInsuranceChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    innerRadius={60}
+                    fill="#8884d8"
+                    dataKey="value"
+                    paddingAngle={2}
+                  >
+                    {rentersInsuranceChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} stroke={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-bold">{totalTenants}</span>
+                <span className="text-xs text-muted-foreground">Total</span>
+              </div>
+            </div>
+            <div className="mt-4 w-full text-sm">
+              <div className="font-medium mb-1">Insured</div>
+              <div className="flex items-center justify-between text-muted-foreground text-xs ml-2">
+                <span>MSI policy</span>
+                <span>{msiPolicyCount}</span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground text-xs ml-2">
+                <span>Third Party</span>
+                <span>{thirdPartyPolicyCount}</span>
+              </div>
+               <div className="font-medium mt-2 mb-1">Uninsured</div>
+                <div className="flex items-center justify-between text-muted-foreground text-xs ml-2">
+                  <span>Not insured</span>
+                  <span>{uninsuredTenants}</span>
+                </div>
+            </div>
+          </CardContent>
+          <CardFooter className="text-xs text-muted-foreground justify-end">
+            <Link href="/tenants?filter=insurance" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Overdue Tasks Card */}
+         <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader>
+            <CardTitle>Overdue Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="my-overdue" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="my-overdue">My overdue tasks</TabsTrigger>
+                <TabsTrigger value="all-overdue">All overdue tasks</TabsTrigger>
+              </TabsList>
+              <TabsContent value="my-overdue">
+                {overdueTasksData.length > 0 ? (
+                  <div className="space-y-3">
+                    {overdueTasksData.map(task => (
+                       <div key={task.id} className="py-2 border-b last:border-b-0">
+                        <p className="font-medium text-sm text-primary hover:underline cursor-pointer">{task.title}</p>
+                        <p className="text-xs text-muted-foreground">{task.dueDate} | {task.propertyUnit}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No overdue tasks for you.</p>
+                )}
+              </TabsContent>
+              <TabsContent value="all-overdue">
+                {/* Display all overdue tasks - for simplicity, reusing the same filtered data for now */}
+                 {overdueTasksData.length > 0 ? (
+                  <div className="space-y-3">
+                    {overdueTasksData.map(task => (
+                       <div key={task.id} className="py-2 border-b last:border-b-0">
+                        <p className="font-medium text-sm text-primary hover:underline cursor-pointer">{task.title}</p>
+                        <p className="text-xs text-muted-foreground">{task.dueDate} | {task.propertyUnit}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">No overdue tasks.</p>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+           <CardFooter className="text-xs text-muted-foreground justify-between">
+            <span>Showing {overdueTasksData.length} of {totalOverdueTasks}</span>
+             <Link href="/tasks?filter=overdue" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Expiring Leases Card */}
+        <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader>
+            <CardTitle>Expiring Leases</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <Tabs defaultValue="0-30" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4 text-xs">
+                <TabsTrigger value="0-30" className="px-1">0 - 30 days</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-1">31 - 60 days</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-1">61 - 90 days</TabsTrigger>
+                <TabsTrigger value="all" className="px-1">All</TabsTrigger>
+              </TabsList>
+              <TabsContent value="0-30">
+                <div className="w-full h-40"> {/* Height for chart */}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={expiringLeasesChartData} layout="vertical" margin={{ top: 5, right: 20, left: 50, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} style={{ fontSize: '12px' }} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="hsl(var(--accent))" barSize={20}>
+                        {expiringLeasesChartData.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
+               <TabsContent value="31-60"><p className="text-center text-sm text-muted-foreground py-4">Data for 31-60 days</p></TabsContent>
+               <TabsContent value="61-90"><p className="text-center text-sm text-muted-foreground py-4">Data for 61-90 days</p></TabsContent>
+               <TabsContent value="all"><p className="text-center text-sm text-muted-foreground py-4">All expiring leases data</p></TabsContent>
+            </Tabs>
+          </CardContent>
+          <CardFooter className="text-xs text-muted-foreground justify-between">
+            <span>{totalExpiringLeases} leases</span>
+            <Link href="/leasing?filter=expiring" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Expiring Renters Insurance Card */}
+        <Card className="lg:col-span-1 shadow-lg">
+          <CardHeader>
+            <CardTitle>Expiring Renters Insurance</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <Tabs defaultValue="expired" className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-4 text-xs">
+                <TabsTrigger value="expired" className="px-1">Expired</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-1">0 - 30 days</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-1">31 - 60 days</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-1">61 - 90 days</TabsTrigger>
+              </TabsList>
+              <TabsContent value="expired">
+                {lapsedInsuranceCount > 0 ? (
+                  <p className="text-sm text-muted-foreground">{lapsedInsuranceCount} policies expired.</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">There are no expired policies</p>
+                )}
+              </TabsContent>
+              <TabsContent value="0-30"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 0-30 days.</p></TabsContent>
+              <TabsContent value="31-60"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 31-60 days.</p></TabsContent>
+              <TabsContent value="61-90"><p className="text-center text-sm text-muted-foreground py-4">No policies expiring in 61-90 days.</p></TabsContent>
+            </Tabs>
+          </CardContent>
+           <CardFooter className="text-xs text-muted-foreground justify-end">
+             <Link href="/tenants?filter=insurance_expired" className="text-primary hover:underline font-medium">
+              View all +
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+       {/* Floating Compose Email Button - Approximation */}
+      <div className="fixed bottom-6 right-6">
+        <Button className="rounded-full shadow-lg" size="lg">
+          <Mail className="mr-2 h-5 w-5" /> + Compose email
+        </Button>
       </div>
     </div>
   );
 }
+
+    
