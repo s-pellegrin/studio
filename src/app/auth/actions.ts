@@ -103,14 +103,22 @@ export async function loginUser(values: z.infer<typeof LoginSchema>): Promise<Ac
     // This is where you'd use a library like next-auth, lucia-auth, or iron-session
 
     console.log('Placeholder: User logged in successfully', { email });
-    // For this placeholder, we'll just return success.
-  } catch (error) {
-    console.error('Login error:', error);
+    // If login is successful, redirect to the modules page.
+    redirect('/modules'); 
+    // Note: redirect() throws an error, so code after it in this try block won't run.
+  } catch (error: any) {
+    // Check if the error is a Next.js redirect error
+    if (typeof error.digest === 'string' && error.digest.includes('NEXT_REDIRECT')) {
+      throw error; // Re-throw the redirect error so Next.js can handle it
+    }
+
+    // If it's not a redirect error, then it's an actual login process error
+    console.error('Login error (non-redirect):', error);
     return { success: false, error: 'An unexpected error occurred during login.' };
   }
   
-  // If login is successful, redirect to the dashboard.
-  // This must be called outside of try/catch or after it completes.
-  redirect('/'); 
-  // return { success: true }; // This line won't be reached due to redirect
+  // This line won't be reached if redirect() is called successfully within the try block.
+  // It's here for type correctness if redirect was conditional and didn't happen.
+  // However, in the current logic, redirect() always throws if login details are valid.
+  // return { success: true }; // Effectively unreachable in the current success path
 }
