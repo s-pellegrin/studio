@@ -2,14 +2,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card'; // CardDescription, CardHeader, CardTitle removed as not used for DraggableItem
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, MousePointerSquareDashed, Zap, Play, Settings2, Save, TestTube2, MessageSquare, Clock, Users, FileText, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useEffect, useState, type CSSProperties } from 'react';
-import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type Active, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useEffect, useState, type CSSProperties, useCallback } from 'react';
+import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type Active, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
 interface PaletteItem {
@@ -23,30 +23,34 @@ interface PaletteItem {
 interface WorkflowCanvasItem extends PaletteItem {
   x: number;
   y: number;
-  canvasId: string;
+  canvasId: string; // Unique ID for the item on the canvas
 }
 
 const DraggablePaletteItem = ({ item, isOverlay }: { item: PaletteItem; isOverlay?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
-    data: item, // Pass the whole item data
+    data: { ...item, isPaletteItem: true }, // Pass the whole item data and a flag
   });
 
   const style: CSSProperties = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: isDragging || isOverlay ? 100 : undefined,
+        zIndex: isDragging || isOverlay ? 1000 : undefined, // Ensure overlay is on top
         opacity: isDragging && !isOverlay ? 0.5 : 1,
+        cursor: 'grabbing',
       }
-    : { zIndex: isOverlay ? 100 : undefined };
+    : { 
+        zIndex: isOverlay ? 1000 : undefined,
+        cursor: 'grab',
+      };
 
   return (
-    <Card 
-      ref={setNodeRef} 
-      style={style} 
-      {...attributes} 
+    <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
       {...listeners}
-      className={`p-3 cursor-grab hover:shadow-md active:cursor-grabbing active:shadow-lg transition-shadow ${isOverlay ? 'ring-2 ring-primary shadow-2xl' : ''}`}
+      className={`p-3 hover:shadow-md active:shadow-lg transition-shadow ${isOverlay ? 'ring-2 ring-primary shadow-2xl bg-card' : 'bg-card'}`}
     >
       <div className="flex items-center gap-2 mb-1">
         <item.icon className="h-5 w-5 text-primary" />
@@ -58,9 +62,9 @@ const DraggablePaletteItem = ({ item, isOverlay }: { item: PaletteItem; isOverla
 };
 
 const CanvasItem = ({ item }: { item: WorkflowCanvasItem }) => (
-  <Card 
-    style={{ position: 'absolute', left: item.x, top: item.y, width: '250px' }} // Example fixed width
-    className="p-3 shadow-md cursor-default" // Not draggable on canvas for now
+  <Card
+    style={{ position: 'absolute', left: item.x, top: item.y, width: '250px' }}
+    className="p-3 shadow-md cursor-default" // Items on canvas are not draggable in this version
   >
     <div className="flex items-center gap-2 mb-1">
       <item.icon className="h-5 w-5 text-primary" />
@@ -72,7 +76,7 @@ const CanvasItem = ({ item }: { item: WorkflowCanvasItem }) => (
 
 
 export default function AutomationCanvasPage() {
-  const { setOpen, isMobile, open: sidebarOpen } = useSidebar();
+  const { setOpen: setAppSidebarOpen, isMobile, open: appSidebarOpen } = useSidebar();
   const [activeDragItem, setActiveDragItem] = useState<PaletteItem | null>(null);
   const [workflowItems, setWorkflowItems] = useState<WorkflowCanvasItem[]>([]);
   const [canvasRect, setCanvasRect] = useState<DOMRect | null>(null);
@@ -80,18 +84,21 @@ export default function AutomationCanvasPage() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 8, // User must drag for 8px before drag starts
       },
     })
   );
-  
+
+  // Minimize sidebar by default on this page for non-mobile users
   useEffect(() => {
-    if (isMobile === false && sidebarOpen) { // Explicitly check for false to avoid undefined case
-      setOpen(false);
+    if (isMobile === false && appSidebarOpen) {
+      setAppSidebarOpen(false);
     }
-  }, [isMobile, sidebarOpen, setOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, setAppSidebarOpen]); // Only run on mount and when isMobile changes
 
   const triggers: PaletteItem[] = [
+    { id: 'trigger-form-filled', type: 'trigger', name: 'Form Submitted', description: 'Starts when a specific form is filled.', icon: FileText },
     { id: 'trigger-email', type: 'trigger', name: 'New Email Received', description: 'Starts when a new email matches criteria.', icon: MessageSquare },
     { id: 'trigger-schedule', type: 'trigger', name: 'Scheduled Time', description: 'Starts at a specific time or interval.', icon: Clock },
     { id: 'trigger-tenant', type: 'trigger', name: 'Tenant Action', description: 'e.g., Lease signed, payment made.', icon: Users },
@@ -99,6 +106,7 @@ export default function AutomationCanvasPage() {
   ];
 
   const actions: PaletteItem[] = [
+    { id: 'action-send-to-ai', type: 'action', name: 'Send to AI Agent', description: 'Process data with an AI agent.', icon: Zap },
     { id: 'action-send-email', type: 'action', name: 'Send Email', description: 'Compose and send an email.', icon: MessageSquare },
     { id: 'action-create-task', type: 'action', name: 'Create Task', description: 'Add a new task to the system.', icon: FileText },
     { id: 'action-update-record', type: 'action', name: 'Update Record', description: 'Modify data in a property, tenant, etc.', icon: Settings2 },
@@ -111,84 +119,68 @@ export default function AutomationCanvasPage() {
     id: 'workflow-canvas-droppable',
   });
 
+  // Update canvasRect when the droppable canvas element's rect changes
   useEffect(() => {
-    if(droppableCanvasRect) {
-      // This rect is relative to the viewport, which is what we need for clientX/Y calculations
+    if (droppableCanvasRect) {
       setCanvasRect(droppableCanvasRect);
     }
   }, [droppableCanvasRect]);
 
 
   const handleDragStart = (event: { active: Active }) => {
-    const activeItem = triggers.find(t => t.id === event.active.id) || actions.find(a => a.id === event.active.id);
-    if (activeItem) {
+    if (event.active.data.current?.isPaletteItem) {
+      const activeItem = event.active.data.current as PaletteItem;
       setActiveDragItem(activeItem);
     }
   };
   
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     setActiveDragItem(null);
-    const { active, over, delta } = event;
+    const { active, over } = event;
   
-    if (over && over.id === 'workflow-canvas-droppable' && active.data.current && canvasRect) {
+    // Check if the drop target is the canvas and the dragged item is from the palette
+    if (over?.id === 'workflow-canvas-droppable' && active.data.current?.isPaletteItem && canvasRect) {
       const draggedItemData = active.data.current as PaletteItem;
       
-      // Get the drop position relative to the canvasRect origin
-      // clientX/Y could be used here if sensors provide it, or use transform/delta
-      // Assuming we use the initial position of the drag overlay, adjusted by delta, and then relative to canvas
-      // This needs refinement based on how PointerSensor provides coordinates.
-      // For simplicity, let's assume delta gives us the position on drop relative to start.
-      // A more robust way: use event.activatorEvent which can be PointerEvent
-      
-      let dropX = 0;
-      let dropY = 0;
+      // active.rect.current.translated gives the position of the drag overlay
+      const itemRect = active.rect.current.translated;
 
-      if (event.activatorEvent instanceof PointerEvent) {
-          dropX = event.activatorEvent.clientX - canvasRect.left;
-          dropY = event.activatorEvent.clientY - canvasRect.top;
+      if (itemRect) {
+        const dropX = itemRect.left - canvasRect.left;
+        const dropY = itemRect.top - canvasRect.top;
+        
+        // You might want to adjust for item dimensions to center it or align top-left
+        // For now, we use the top-left of the dragged item relative to canvas
+        const newItem: WorkflowCanvasItem = {
+          ...draggedItemData,
+          canvasId: `canvas-${draggedItemData.id}-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, // More robust unique ID
+          x: dropX,
+          y: dropY,
+        };
+  
+        setWorkflowItems((prevItems) => [...prevItems, newItem]);
       } else {
-         // Fallback or different logic if not a pointer event
-         // This might be an approximation
-         // The exact position depends on where the DragOverlay was rendered and how transform is applied
-         // For now, let's use a simpler delta approach.
-         // This will place the item based on its drag movement relative to its start, which might not be ideal.
-         // A better way is to capture pointer position on drop.
-         // Let's assume activatorEvent provides coordinates
+        console.warn("Could not get translated rect for dragged item.");
       }
-
-
-      // Get the position where the item was dropped within the canvas element
-      // Need current pointer position from the event if possible.
-      // `event.activatorEvent` might be a PointerEvent
-      let finalX = 0;
-      let finalY = 0;
-      if (event.activatorEvent && 'clientX' in event.activatorEvent && 'clientY' in event.activatorEvent) {
-        finalX = event.activatorEvent.clientX - canvasRect.left;
-        finalY = event.activatorEvent.clientY - canvasRect.top;
-      } else {
-        // Fallback if PointerEvent is not available (e.g. keyboard) - won't happen with PointerSensor
-        // Or, calculate based on where the drag started and the delta.
-        // For simplicity, if pointer not available, place at a default spot or ignore.
-        console.warn("Could not determine drop position accurately, using delta.");
-        finalX = delta.x; // This isn't relative to canvas, needs adjustment
-        finalY = delta.y;
-      }
-
-
-      setWorkflowItems((prevItems) => [
-        ...prevItems,
-        { 
-          ...draggedItemData, 
-          canvasId: `canvas-${draggedItemData.id}-${new Date().getTime()}`,
-          x: finalX - (activeDragItem ? 125 : 0), // Approximate center of a 250px wide card
-          y: finalY - (activeDragItem ? 50 : 0),  // Approximate center of a 100px tall card
-        },
-      ]);
+    } else {
+      // For debugging if drops aren't working
+      // console.log("Drop condition not met or item not from palette:", {
+      //   overId: over?.id,
+      //   isPaletteItem: active.data.current?.isPaletteItem,
+      //   hasCanvasRect: !!canvasRect,
+      //   hasTranslatedRect: !!active.rect.current.translated
+      // });
     }
-  };
+  }, [canvasRect]); // Include canvasRect in dependencies
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors} modifiers={[restrictToWindowEdges]}>
+    <DndContext 
+        onDragStart={handleDragStart} 
+        onDragEnd={handleDragEnd} 
+        sensors={sensors} 
+        collisionDetection={closestCenter}
+        modifiers={[restrictToWindowEdges]}
+    >
       <div className="flex flex-col h-[calc(100vh-4rem)]"> {/* Adjust for main header height */}
         {/* Workflow Builder Header */}
         <header className="sticky top-16 z-30 flex items-center justify-between p-3 border-b bg-background/95 backdrop-blur-sm">
@@ -199,8 +191,8 @@ export default function AutomationCanvasPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-lg font-semibold">Automation Workflow Builder</h1>
-              <p className="text-xs text-muted-foreground">Unsaved Workflow</p>
+              <h1 className="text-lg font-semibold">New Automation Workflow</h1>
+              <p className="text-xs text-muted-foreground">Unsaved</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -216,7 +208,7 @@ export default function AutomationCanvasPage() {
             <ScrollArea className="flex-1">
               <div className="p-4">
                 <h2 className="text-base font-semibold mb-3">Triggers</h2>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {triggers.map(trigger => (
                     <DraggablePaletteItem key={trigger.id} item={trigger} />
                   ))}
@@ -225,7 +217,7 @@ export default function AutomationCanvasPage() {
               <Separator className="my-3" />
               <div className="p-4">
                 <h2 className="text-base font-semibold mb-3">Actions</h2>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {actions.map(action => (
                     <DraggablePaletteItem key={action.id} item={action} />
                   ))}
@@ -235,18 +227,19 @@ export default function AutomationCanvasPage() {
           </aside>
 
           {/* Workflow Canvas (Main Area) */}
-          <main 
-            ref={canvasDroppableRef} 
+          <main
+            ref={canvasDroppableRef}
             className="flex-1 p-6 bg-muted/30 overflow-auto relative" // Added relative for positioning canvas items
+            style={{ minHeight: '600px' }} // Ensure canvas has a minimum height
           >
             {workflowItems.length === 0 ? (
-              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg min-h-[600px] flex flex-col items-center justify-center text-muted-foreground">
+              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-full flex flex-col items-center justify-center text-muted-foreground">
                 <MousePointerSquareDashed className="h-16 w-16 mb-4 opacity-50" />
                 <h2 className="text-xl font-medium mb-1">Workflow Canvas</h2>
                 <p className="text-sm">Drag triggers and actions from the left panel to build your workflow.</p>
               </div>
             ) : (
-              <div className="min-h-[600px] w-full h-full relative"> {/* Ensure canvas area takes space */}
+              <div className="w-full h-full relative"> {/* Container for absolute positioned items */}
                 {workflowItems.map(item => (
                   <CanvasItem key={item.canvasId} item={item} />
                 ))}
