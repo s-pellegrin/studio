@@ -88,40 +88,26 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
     setOpenSubMenus(prev => ({ ...prev, [label]: !prev[label] }));
   };
   
-  // Close popover-opened submenus if sidebar expands
   useEffect(() => {
     if (sidebarState === 'expanded' && !isMobile) {
-      // Create a new state object to avoid mutating the previous one directly
       const newOpenSubMenusState = { ...openSubMenus };
       let changed = false;
       for (const key in newOpenSubMenusState) {
-        // This logic assumes submenus opened via popover might need explicit closing.
-        // However, if popover's open state is tied to openSubMenus,
-        // and the trigger for popover is not rendered in expanded view,
-        // this might not be strictly necessary or could be simplified.
-        // For now, let's ensure any 'true' state is re-evaluated based on active path.
         const item = navItems.find(navItem => navItem.label === key);
         if (item && item.subItems) {
            const shouldBeOpenInline = item.subItems.some(sub => pathname.startsWith(sub.href));
            if(newOpenSubMenusState[key] && !shouldBeOpenInline) {
-            // If it was open, but no sub-item is active, ensure it's closed for inline view.
-            // Or, if you want to preserve the last "clicked open" state for inline, this needs adjustment.
-            // Let's simplify: if it's expanded, rely on active path for initial open, user click for others.
-            // This effect might be better suited to close ALL popovers when switching to expanded.
-            // For now, let's keep it less aggressive.
            } else if (!newOpenSubMenusState[key] && shouldBeOpenInline) {
-             newOpenSubMenusState[key] = true; // Ensure active path submenus are open inline
+             newOpenSubMenusState[key] = true; 
              changed = true;
            }
         }
       }
       if (changed) {
-        // setOpenSubMenus(newOpenSubMenusState); // This line caused infinite loop.
-        // Better: let popovers close naturally when their triggers are no longer rendered due to sidebar state change.
-        // The main concern is ensuring the *inline* submenus are correctly shown/hidden.
+        // setOpenSubMenus(newOpenSubMenusState); 
       }
     }
-  }, [sidebarState, isMobile, pathname, navItems]);
+  }, [sidebarState, isMobile, pathname, navItems, openSubMenus]);
 
 
   return (
@@ -133,7 +119,6 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
         if (item.subItems) {
           const isSubMenuOpen = openSubMenus[item.label] || false;
 
-          // Expanded sidebar or mobile view: inline submenu
           if (sidebarState === "expanded" || isMobile) {
             return (
               <SidebarMenuItem key={item.label}>
@@ -167,7 +152,7 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                   <SidebarMenuSub>
                     {item.subItems.map(subItem => (
                       <SidebarMenuSubItem key={subItem.label}>
-                        <Link href={subItem.href} passHref legacyBehavior>
+                        <Link href={subItem.href} asChild>
                             <SidebarMenuSubButton isActive={pathname.startsWith(subItem.href)}>
                               <span>{subItem.label}</span>
                             </SidebarMenuSubButton>
@@ -179,7 +164,6 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
               </SidebarMenuItem>
             );
           } 
-          // Collapsed sidebar (desktop): popover submenu
           else {
             return (
               <SidebarMenuItem key={item.label}>
@@ -206,13 +190,13 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
                     side="right"
                     align="start"
                     className="ml-1 p-1 w-auto bg-sidebar text-sidebar-foreground border-sidebar-border shadow-md"
-                    onOpenAutoFocus={(e) => e.preventDefault()} // Prevent focus stealing
+                    onOpenAutoFocus={(e) => e.preventDefault()} 
                     sideOffset={5}
                   >
                     <SidebarMenuSub className={cn("!mx-0 !border-l-0 !p-0", "flex flex-col gap-1")}>
                        {item.subItems.map(subItem => (
                         <SidebarMenuSubItem key={subItem.label}>
-                          <Link href={subItem.href} passHref legacyBehavior>
+                          <Link href={subItem.href} asChild>
                             <SidebarMenuSubButton 
                               isActive={pathname.startsWith(subItem.href)}
                               onClick={() => {
@@ -231,7 +215,6 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
             );
           }
         } 
-        // Regular item (no subItems)
         else {
           const isActive = item.href === '/' ? pathname === item.href : (item.href ? pathname.startsWith(item.href) : false);
           return (
@@ -239,17 +222,15 @@ export default function NavigationMenuClient({ navItems }: NavigationMenuClientP
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span>
-                      <Link href={item.href || '#'} passHref legacyBehavior>
-                          <SidebarMenuButton
-                            className="justify-start"
-                            isActive={isActive}
-                          >
-                            {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
-                            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                          </SidebarMenuButton>
-                      </Link>
-                    </span>
+                    <Link href={item.href || '#'} asChild>
+                        <SidebarMenuButton
+                          className="justify-start"
+                          isActive={isActive}
+                        >
+                          {IconComponent ? <IconComponent className="h-5 w-5" /> : <div className="h-5 w-5" />}
+                          <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                        </SidebarMenuButton>
+                    </Link>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="ml-1" hidden={sidebarState === "expanded" || isMobile}>
                     {item.label}
