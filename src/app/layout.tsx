@@ -25,8 +25,9 @@ import {
   Search,
   Rocket,
   Sparkles,
-  Sun, // Added for theme toggle
-  Moon, // Added for theme toggle
+  Star, // Added Star icon for Review button
+  Sun, 
+  Moon, 
 } from 'lucide-react';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -205,6 +206,9 @@ export default function RootLayout({
               <div className="flex items-center gap-2 sm:gap-4">
                 <Button variant="ghost" size="icon" aria-label="Notifications">
                   <Bell className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" aria-label="Leave a Review">
+                  <Star className="h-5 w-5" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
