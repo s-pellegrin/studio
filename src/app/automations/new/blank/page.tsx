@@ -9,7 +9,7 @@ import { ArrowLeft, MousePointerSquareDashed, Zap, Play, Settings2, Save, TestTu
 import Link from 'next/link';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useEffect, useState, type CSSProperties, useCallback, useRef } from 'react';
-import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type Active, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type Active, PointerSensor, useSensor, useSensors, rectIntersection } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
 interface PaletteItem {
@@ -23,7 +23,7 @@ interface PaletteItem {
 interface WorkflowCanvasItem extends PaletteItem {
   x: number;
   y: number;
-  canvasId: string; // Unique ID for the item on the canvas
+  canvasId: string; 
 }
 
 const DraggablePaletteItem = ({ item, isOverlay }: { item: PaletteItem; isOverlay?: boolean }) => {
@@ -79,7 +79,7 @@ export default function AutomationCanvasPage() {
   const { setOpen: setAppSidebarOpen, isMobile, open: appSidebarOpen } = useSidebar();
   const [activeDragItem, setActiveDragItem] = useState<PaletteItem | null>(null);
   const [workflowItems, setWorkflowItems] = useState<WorkflowCanvasItem[]>([]);
-  const [canvasRect, setCanvasRect] = useState<DOMRect | null>(null);
+  const [canvasRect, setCanvasRect] = useState<DOMRect | null>(null); // State for canvas rect
   const canvasScrollContainerRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -122,10 +122,17 @@ export default function AutomationCanvasPage() {
   const combinedCanvasRef = useCallback((node: HTMLDivElement | null) => {
     setDroppableNodeRef(node); 
     canvasScrollContainerRef.current = node; 
+    if (node) {
+        // Update canvasRect whenever the node is set or changes
+        // This ensures canvasRect in state is kept in sync with the measured rect
+        setCanvasRect(node.getBoundingClientRect());
+    }
   }, [setDroppableNodeRef]);
 
 
   useEffect(() => {
+    // Keep the canvasRect state updated if the droppableCanvasRect (from the hook) changes
+    // This is a fallback in case direct ref update in combinedCanvasRef isn't enough or for resize
     if (droppableCanvasRect) {
       setCanvasRect(droppableCanvasRect);
     }
@@ -133,69 +140,102 @@ export default function AutomationCanvasPage() {
 
 
   const handleDragStart = (event: { active: Active }) => {
+    console.log('[DragStart] Event:', event);
     if (event.active.data.current?.isPaletteItem) {
       const activeItem = event.active.data.current as PaletteItem;
       setActiveDragItem(activeItem);
+      console.log('[DragStart] Active palette item:', activeItem);
+    } else {
+      console.log('[DragStart] Active item is not a palette item:', event.active.data.current);
     }
   };
   
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    console.log('[DragEnd] Event:', event);
     setActiveDragItem(null);
     const { active, over } = event;
-  
-    if (over?.id === 'workflow-canvas-droppable' && active.data.current?.isPaletteItem && canvasRect && canvasScrollContainerRef.current) {
+
+    console.log('[DragEnd] Active item:', active);
+    console.log('[DragEnd] Over item:', over);
+    console.log('[DragEnd] Current canvasRect (state):', canvasRect);
+    console.log('[DragEnd] Current droppableCanvasRect (from useDroppable hook):', droppableCanvasRect);
+
+
+    if (over?.id === 'workflow-canvas-droppable' && active.data.current?.isPaletteItem && canvasScrollContainerRef.current) {
+      console.log('[DragEnd] Conditions met: Dropping onto canvas from palette.');
       const draggedItemData = active.data.current as PaletteItem;
-      const itemRect = active.rect.current.translated;
-      const scrollContainer = canvasScrollContainerRef.current;
+      const itemRect = active.rect.current.translated; 
 
-      if (itemRect) {
-        const canvasScrollX = scrollContainer.scrollLeft;
-        const canvasScrollY = scrollContainer.scrollTop;
+      // Prioritize droppableCanvasRect from the hook as it's directly from dnd-kit's measurement
+      // Fallback to canvasRect (state) if droppableCanvasRect isn't available for some reason
+      const currentCnvRect = droppableCanvasRect || canvasRect;
 
-        const dropX = itemRect.left - canvasRect.left + canvasScrollX;
-        const dropY = itemRect.top - canvasRect.top + canvasScrollY;
+      if (itemRect && currentCnvRect) {
+        console.log('[DragEnd] itemRect (dragged item viewport rect):', itemRect);
+        console.log('[DragEnd] currentCnvRect (droppable canvas viewport rect):', currentCnvRect);
+
+        const canvasScrollX = canvasScrollContainerRef.current.scrollLeft;
+        const canvasScrollY = canvasScrollContainerRef.current.scrollTop;
+        console.log('[DragEnd] Canvas ScrollX:', canvasScrollX, 'ScrollY:', canvasScrollY);
         
+        const dropX = itemRect.left - currentCnvRect.left + canvasScrollX;
+        const dropY = itemRect.top - currentCnvRect.top + canvasScrollY;
+        
+        console.log('[DragEnd] Calculated dropX:', dropX, 'dropY:', dropY);
+
         const newItem: WorkflowCanvasItem = {
           ...draggedItemData,
           canvasId: `canvas-${draggedItemData.id}-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
           x: dropX,
           y: dropY,
         };
+        console.log('[DragEnd] New item to add:', newItem);
   
         const isFirstItem = workflowItems.length === 0;
-        setWorkflowItems((prevItems) => [...prevItems, newItem]);
-  
-        if (isFirstItem) {
-          // Estimate item dimensions for centering
-          const itemWidth = 250; // Based on CanvasItem style
-          // Estimate height: Icon(20) + Name(20) + Desc_lines * 14 + Padding(24)
-          // A simple fixed estimate for now, can be improved
+        setWorkflowItems((prevItems) => {
+          const updated = [...prevItems, newItem];
+          console.log('[DragEnd] Updated workflowItems (inside setWorkflowItems):', updated);
+          return updated;
+        });
+        console.log('[DragEnd] workflowItems length after set (outside setWorkflowItems):', workflowItems.length + 1); // +1 because state update is async
+
+        if (isFirstItem && canvasScrollContainerRef.current) {
+          console.log('[DragEnd] First item dropped. Attempting to center.');
+          const itemWidth = 250; 
           const itemHeight = 100; 
           
-          const viewportWidth = scrollContainer.clientWidth;
-          const viewportHeight = scrollContainer.clientHeight;
+          const viewportWidth = canvasScrollContainerRef.current.clientWidth;
+          const viewportHeight = canvasScrollContainerRef.current.clientHeight;
+          console.log('[DragEnd] Viewport W:', viewportWidth, 'H:', viewportHeight);
   
           const targetScrollLeft = newItem.x + (itemWidth / 2) - (viewportWidth / 2);
           const targetScrollTop = newItem.y + (itemHeight / 2) - (viewportHeight / 2);
+          console.log('[DragEnd] Target ScrollL:', targetScrollLeft, 'ScrollT:', targetScrollTop);
           
-          scrollContainer.scrollTo({
+          canvasScrollContainerRef.current.scrollTo({
             left: Math.max(0, targetScrollLeft),
             top: Math.max(0, targetScrollTop),
             behavior: 'smooth',
           });
+          console.log('[DragEnd] ScrollTo called.');
         }
       } else {
-        console.warn("DragEnd: Could not get translated rect for dragged item. Drop aborted.");
+        console.warn("[DragEnd] Could not get itemRect or currentCnvRect. Drop aborted.", {itemRect, currentCnvRect});
       }
+    } else {
+      console.log('[DragEnd] Drop conditions not met or not over canvas.');
+      console.log('  Is over?.id === workflow-canvas-droppable?', over?.id === 'workflow-canvas-droppable', '(Actual over.id:', over?.id, ')');
+      console.log('  Is active.data.current?.isPaletteItem?', !!active.data.current?.isPaletteItem);
+      console.log('  Does canvasScrollContainerRef.current exist?', !!canvasScrollContainerRef.current);
     }
-  }, [canvasRect, workflowItems]);
+  }, [canvasRect, workflowItems, droppableCanvasRect]);
 
   return (
     <DndContext 
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd} 
         sensors={sensors} 
-        collisionDetection={closestCenter}
+        collisionDetection={rectIntersection} // Changed collision strategy
         modifiers={[restrictToWindowEdges]}
     >
       <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -241,9 +281,10 @@ export default function AutomationCanvasPage() {
           </aside>
 
           <main
-            ref={combinedCanvasRef}
+            ref={combinedCanvasRef} // This ref is used by useDroppable and canvasScrollContainerRef
             className="flex-1 p-6 bg-muted/30 overflow-auto relative" 
             style={{ minHeight: '600px' }} 
+            id="workflow-canvas-droppable" // Ensure this ID matches useDroppable and over.id check
           >
             {workflowItems.length === 0 ? (
               <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-full flex flex-col items-center justify-center text-muted-foreground">
@@ -268,4 +309,3 @@ export default function AutomationCanvasPage() {
   );
 }
 
-    
