@@ -97,6 +97,7 @@ interface ExpiringLeaseData {
 
 export default function DashboardPage() {
   const [greeting, setGreeting] = useState('Good day');
+  const [userName, setUserName] = useState('User'); // State for user's name
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -107,6 +108,8 @@ export default function DashboardPage() {
     } else {
       setGreeting('Good evening');
     }
+    // Simulate fetching user's first name
+    setUserName('Manager'); // Replace with actual user name fetching logic
   }, []);
 
   // Outstanding Balances
@@ -196,7 +199,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">{greeting}, user!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{greeting}, {userName}!</h1>
         <Button variant="outline" size="sm">
           <Settings2 className="mr-2 h-4 w-4" /> Customize dashboard
         </Button>
