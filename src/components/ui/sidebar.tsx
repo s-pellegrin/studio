@@ -541,14 +541,14 @@ const sidebarMenuButtonVariants = cva(
 )
 
 interface SidebarMenuButtonProps
-  extends React.HTMLAttributes<HTMLDivElement>, // Changed from React.AnchorHTMLAttributes<HTMLAnchorElement>
+  extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof sidebarMenuButtonVariants> {
   isActive?: boolean;
-  asChild?: boolean; // Keep asChild for Slot compatibility if needed, though Link handles it.
+  asChild?: boolean;
 }
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLDivElement, // Changed from HTMLAnchorElement
+  HTMLDivElement,
   SidebarMenuButtonProps
 >(
   (
@@ -558,18 +558,12 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       className,
       children,
-      asChild, // Destructure asChild
-      ...restProps
+      asChild = false, // Ensure asChild is destructured and defaulted
+      ...props // All other props (e.g., href from Link)
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "div"; // Use Slot if asChild is true, otherwise div
-
-    const elementProps = { ...restProps };
-    // Ensure href is not passed to div if it's there
-    delete (elementProps as any).href;
-    // asChild prop itself should not be spread to the DOM element by Slot or div
-    // No need to delete asChild here if Comp handles it or if it's not in restProps
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
@@ -577,10 +571,11 @@ const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        role={!asChild ? "button" : undefined} // Add role if it's a div acting as a button
-        tabIndex={!asChild ? 0 : undefined} // Make it focusable if it's a div
+        // Role and tabIndex are managed by Link when asChild is true, or set for div
+        role={Comp === "div" ? "button" : undefined}
+        tabIndex={Comp === "div" && !props.onClick ? 0 : undefined} // Make focusable if it's a div acting as button/link
         className={cn(sidebarMenuButtonVariants({ variant, size, className }))}
-        {...elementProps}
+        {...props} // Spread all other props. If Comp is Slot, href is passed. If div, href is passed but div ignores it.
       >
         {children}
       </Comp>
@@ -702,22 +697,18 @@ const SidebarMenuSubItem = React.forwardRef<
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 interface SidebarMenuSubButtonProps
-  extends React.HTMLAttributes<HTMLDivElement>, // Changed from React.AnchorHTMLAttributes<HTMLAnchorElement>
+  extends React.HTMLAttributes<HTMLDivElement>, 
     VariantProps<typeof sidebarMenuButtonVariants> { 
   size?: "sm" | "md";
   isActive?: boolean;
-  asChild?: boolean; // Keep for Slot
+  asChild?: boolean; 
 }
 
 const SidebarMenuSubButton = React.forwardRef<
-  HTMLDivElement, // Changed from HTMLAnchorElement
+  HTMLDivElement,
   SidebarMenuSubButtonProps
->(({ size = "md", isActive, className, children, asChild, ...restProps }, ref) => {
-  const Comp = asChild ? Slot : "div"; // Use Slot if asChild is true, otherwise div
-
-  const elementProps = { ...restProps };
-  delete (elementProps as any).href;
-  // No need to delete asChild if Comp handles it
+>(({ size = "md", isActive, className, children, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot : "div";
 
   return (
     <Comp
@@ -725,8 +716,8 @@ const SidebarMenuSubButton = React.forwardRef<
       data-sidebar="menu-sub-button"
       data-size={size}
       data-active={isActive}
-      role={!asChild ? "link" : undefined} // Add role if it's a div acting as a link
-      tabIndex={!asChild ? 0 : undefined} // Make it focusable if it's a div
+      role={Comp === "div" ? "link" : undefined} 
+      tabIndex={Comp === "div" && !props.onClick ? 0 : undefined}
       className={cn(
         "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-accent-foreground",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
@@ -735,7 +726,7 @@ const SidebarMenuSubButton = React.forwardRef<
         "group-data-[collapsible=icon]:hidden",
         className
       )}
-      {...elementProps}
+      {...props}
     >
       {children}
     </Comp>
