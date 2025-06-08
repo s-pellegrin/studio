@@ -97,7 +97,7 @@ interface ExpiringLeaseData {
 
 export default function DashboardPage() {
   const [greeting, setGreeting] = useState('Good day');
-  const [userName, setUserName] = useState('User'); // State for user's name
+  const [userName, setUserName] = useState('User');
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -108,8 +108,8 @@ export default function DashboardPage() {
     } else {
       setGreeting('Good evening');
     }
-    // Simulate fetching user's first name
-    setUserName('Manager'); // Replace with actual user name fetching logic
+    const storedUsername = localStorage.getItem('dashboardUsername');
+    setUserName(storedUsername || 'User'); // Default to 'User' if not found
   }, []);
 
   // Outstanding Balances

@@ -4,7 +4,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent, useEffect } from 'react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export default function ProfileSettingsPage() {
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: 'CurrentUserName', // Replace with actual user data
+      username: '', // Will be loaded from localStorage or default
       email: 'user@example.com', // Replace with actual user data
       businessName: 'My Property Co.', // Replace with actual user data
     },
@@ -67,6 +67,16 @@ export default function ProfileSettingsPage() {
     },
   });
 
+  useEffect(() => {
+    // Load username from localStorage when component mounts
+    const storedUsername = localStorage.getItem('dashboardUsername');
+    if (storedUsername) {
+      profileForm.setValue('username', storedUsername);
+    } else {
+      profileForm.setValue('username', 'CurrentUserName'); // Default if nothing in localStorage
+    }
+  }, [profileForm]);
+
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -75,12 +85,12 @@ export default function ProfileSettingsPage() {
         setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-      // Here you would typically upload the file
       toast({ title: 'Profile Picture', description: 'Avatar preview updated. Save to apply changes.' });
     }
   };
 
   function onProfileSubmit(data: ProfileFormValues) {
+    localStorage.setItem('dashboardUsername', data.username); // Save to localStorage
     toast({
       title: 'Profile Updated',
       description: (
@@ -98,7 +108,6 @@ export default function ProfileSettingsPage() {
       description: 'Password change functionality is not yet implemented.',
     });
     console.log('Password change data:', data);
-    // Add actual password change logic here
     passwordForm.reset();
   }
 
