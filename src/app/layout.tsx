@@ -25,7 +25,7 @@ import {
   Search,
   Rocket,
   Sparkles,
-  Star, // Added Star icon for Review button
+  // Star, // Star is now handled by ReviewFormDialog
   Sun, 
   Moon, 
 } from 'lucide-react';
@@ -59,6 +59,8 @@ import AppLogo from '@/components/layout/app-logo';
 import NavigationMenuClient from '@/components/layout/navigation-menu-client';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import ReviewFormDialog from '@/components/layout/review-form-dialog'; // Import the new component
 
 
 // export const metadata: Metadata = { // Metadata should be exported from server components or page.tsx
@@ -204,12 +206,21 @@ export default function RootLayout({
               </div>
 
               <div className="flex items-center gap-2 sm:gap-4">
-                <Button variant="ghost" size="icon" aria-label="Notifications">
-                  <Bell className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" aria-label="Leave a Review">
-                  <Star className="h-5 w-5" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label="Notifications">
+                        <Bell className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Notifications</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <ReviewFormDialog /> {/* Replaced Star button with ReviewFormDialog */}
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full">
@@ -268,3 +279,4 @@ export default function RootLayout({
     </html>
   );
 }
+
