@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, MousePointerSquareDashed, Zap, Play, Settings2, Save, TestTube2, MessageSquare, Clock, Users, FileText, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useEffect, useState, type CSSProperties, useCallback } from 'react';
+import { useEffect, useState, type CSSProperties, useCallback, useRef } from 'react';
 import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type Active, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
@@ -29,13 +29,13 @@ interface WorkflowCanvasItem extends PaletteItem {
 const DraggablePaletteItem = ({ item, isOverlay }: { item: PaletteItem; isOverlay?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
-    data: { ...item, isPaletteItem: true }, // Pass the whole item data and a flag
+    data: { ...item, isPaletteItem: true }, 
   });
 
   const style: CSSProperties = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: isDragging || isOverlay ? 1000 : undefined, // Ensure overlay is on top
+        zIndex: isDragging || isOverlay ? 1000 : undefined, 
         opacity: isDragging && !isOverlay ? 0.5 : 1,
         cursor: 'grabbing',
       }
@@ -64,7 +64,7 @@ const DraggablePaletteItem = ({ item, isOverlay }: { item: PaletteItem; isOverla
 const CanvasItem = ({ item }: { item: WorkflowCanvasItem }) => (
   <Card
     style={{ position: 'absolute', left: item.x, top: item.y, width: '250px' }}
-    className="p-3 shadow-md cursor-default" // Items on canvas are not draggable in this version
+    className="p-3 shadow-md cursor-default"
   >
     <div className="flex items-center gap-2 mb-1">
       <item.icon className="h-5 w-5 text-primary" />
@@ -80,22 +80,22 @@ export default function AutomationCanvasPage() {
   const [activeDragItem, setActiveDragItem] = useState<PaletteItem | null>(null);
   const [workflowItems, setWorkflowItems] = useState<WorkflowCanvasItem[]>([]);
   const [canvasRect, setCanvasRect] = useState<DOMRect | null>(null);
+  const canvasScrollContainerRef = useRef<HTMLDivElement | null>(null);
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // User must drag for 8px before drag starts
+        distance: 8,
       },
     })
   );
 
-  // Minimize sidebar by default on this page for non-mobile users
   useEffect(() => {
     if (isMobile === false && appSidebarOpen) {
       setAppSidebarOpen(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, setAppSidebarOpen]); // Only run on mount and when isMobile changes
+  }, [isMobile, appSidebarOpen, setAppSidebarOpen]);
 
   const triggers: PaletteItem[] = [
     { id: 'trigger-form-filled', type: 'trigger', name: 'Form Submitted', description: 'Starts when a specific form is filled.', icon: FileText },
@@ -115,11 +115,16 @@ export default function AutomationCanvasPage() {
     { id: 'action-call-api', type: 'action', name: 'Call API', description: 'Make a request to an external API.', icon: Play },
   ];
 
-  const { setNodeRef: canvasDroppableRef, rect: droppableCanvasRect } = useDroppable({
+  const { setNodeRef: setDroppableNodeRef, rect: droppableCanvasRect } = useDroppable({
     id: 'workflow-canvas-droppable',
   });
 
-  // Update canvasRect when the droppable canvas element's rect changes
+  const combinedCanvasRef = useCallback((node: HTMLDivElement | null) => {
+    setDroppableNodeRef(node); 
+    canvasScrollContainerRef.current = node; 
+  }, [setDroppableNodeRef]);
+
+
   useEffect(() => {
     if (droppableCanvasRect) {
       setCanvasRect(droppableCanvasRect);
@@ -138,40 +143,52 @@ export default function AutomationCanvasPage() {
     setActiveDragItem(null);
     const { active, over } = event;
   
-    // Check if the drop target is the canvas and the dragged item is from the palette
-    if (over?.id === 'workflow-canvas-droppable' && active.data.current?.isPaletteItem && canvasRect) {
+    if (over?.id === 'workflow-canvas-droppable' && active.data.current?.isPaletteItem && canvasRect && canvasScrollContainerRef.current) {
       const draggedItemData = active.data.current as PaletteItem;
-      
-      // active.rect.current.translated gives the position of the drag overlay
       const itemRect = active.rect.current.translated;
+      const scrollContainer = canvasScrollContainerRef.current;
 
       if (itemRect) {
-        const dropX = itemRect.left - canvasRect.left;
-        const dropY = itemRect.top - canvasRect.top;
+        const canvasScrollX = scrollContainer.scrollLeft;
+        const canvasScrollY = scrollContainer.scrollTop;
+
+        const dropX = itemRect.left - canvasRect.left + canvasScrollX;
+        const dropY = itemRect.top - canvasRect.top + canvasScrollY;
         
-        // You might want to adjust for item dimensions to center it or align top-left
-        // For now, we use the top-left of the dragged item relative to canvas
         const newItem: WorkflowCanvasItem = {
           ...draggedItemData,
-          canvasId: `canvas-${draggedItemData.id}-${Date.now()}-${Math.random().toString(36).substring(2,7)}`, // More robust unique ID
+          canvasId: `canvas-${draggedItemData.id}-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
           x: dropX,
           y: dropY,
         };
   
+        const isFirstItem = workflowItems.length === 0;
         setWorkflowItems((prevItems) => [...prevItems, newItem]);
+  
+        if (isFirstItem) {
+          // Estimate item dimensions for centering
+          const itemWidth = 250; // Based on CanvasItem style
+          // Estimate height: Icon(20) + Name(20) + Desc_lines * 14 + Padding(24)
+          // A simple fixed estimate for now, can be improved
+          const itemHeight = 100; 
+          
+          const viewportWidth = scrollContainer.clientWidth;
+          const viewportHeight = scrollContainer.clientHeight;
+  
+          const targetScrollLeft = newItem.x + (itemWidth / 2) - (viewportWidth / 2);
+          const targetScrollTop = newItem.y + (itemHeight / 2) - (viewportHeight / 2);
+          
+          scrollContainer.scrollTo({
+            left: Math.max(0, targetScrollLeft),
+            top: Math.max(0, targetScrollTop),
+            behavior: 'smooth',
+          });
+        }
       } else {
-        console.warn("Could not get translated rect for dragged item.");
+        console.warn("DragEnd: Could not get translated rect for dragged item. Drop aborted.");
       }
-    } else {
-      // For debugging if drops aren't working
-      // console.log("Drop condition not met or item not from palette:", {
-      //   overId: over?.id,
-      //   isPaletteItem: active.data.current?.isPaletteItem,
-      //   hasCanvasRect: !!canvasRect,
-      //   hasTranslatedRect: !!active.rect.current.translated
-      // });
     }
-  }, [canvasRect]); // Include canvasRect in dependencies
+  }, [canvasRect, workflowItems]);
 
   return (
     <DndContext 
@@ -181,8 +198,7 @@ export default function AutomationCanvasPage() {
         collisionDetection={closestCenter}
         modifiers={[restrictToWindowEdges]}
     >
-      <div className="flex flex-col h-[calc(100vh-4rem)]"> {/* Adjust for main header height */}
-        {/* Workflow Builder Header */}
+      <div className="flex flex-col h-[calc(100vh-4rem)]">
         <header className="sticky top-16 z-30 flex items-center justify-between p-3 border-b bg-background/95 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Link href="/automations" passHref>
@@ -201,9 +217,7 @@ export default function AutomationCanvasPage() {
           </div>
         </header>
 
-        {/* Main Content Area */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Components Palette (Left Sidebar) */}
           <aside className="w-72 border-r bg-card p-0 flex flex-col">
             <ScrollArea className="flex-1">
               <div className="p-4">
@@ -226,11 +240,10 @@ export default function AutomationCanvasPage() {
             </ScrollArea>
           </aside>
 
-          {/* Workflow Canvas (Main Area) */}
           <main
-            ref={canvasDroppableRef}
-            className="flex-1 p-6 bg-muted/30 overflow-auto relative" // Added relative for positioning canvas items
-            style={{ minHeight: '600px' }} // Ensure canvas has a minimum height
+            ref={combinedCanvasRef}
+            className="flex-1 p-6 bg-muted/30 overflow-auto relative" 
+            style={{ minHeight: '600px' }} 
           >
             {workflowItems.length === 0 ? (
               <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-full flex flex-col items-center justify-center text-muted-foreground">
@@ -239,7 +252,7 @@ export default function AutomationCanvasPage() {
                 <p className="text-sm">Drag triggers and actions from the left panel to build your workflow.</p>
               </div>
             ) : (
-              <div className="w-full h-full relative"> {/* Container for absolute positioned items */}
+              <div className="w-full h-full relative"> 
                 {workflowItems.map(item => (
                   <CanvasItem key={item.canvasId} item={item} />
                 ))}
@@ -254,3 +267,5 @@ export default function AutomationCanvasPage() {
     </DndContext>
   );
 }
+
+    
