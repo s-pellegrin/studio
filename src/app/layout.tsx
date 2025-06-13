@@ -25,7 +25,7 @@ import {
   Search,
   Rocket,
   Sparkles,
-  // Star, // Star is now handled by ReviewFormDialog
+  Star, 
   Sun, 
   Moon, 
 } from 'lucide-react';
@@ -60,7 +60,7 @@ import NavigationMenuClient from '@/components/layout/navigation-menu-client';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import ReviewFormDialog from '@/components/layout/review-form-dialog'; // Import the new component
+import ReviewFormDialog from '@/components/layout/review-form-dialog'; 
 
 
 // export const metadata: Metadata = { // Metadata should be exported from server components or page.tsx
@@ -72,7 +72,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', iconName: 'LayoutDashboard' },
   { href: '/rentals', label: 'Rentals', iconName: 'Home' },
   { href: '/leasing', label: 'Leasing', iconName: 'FileText' },
-  { href: '/associations', label: 'Associations', iconName: 'Users' },
+  { href: '/contacts', label: 'Contacts', iconName: 'Users' },
   { href: '/accounting', label: 'Accounting', iconName: 'DollarSign' },
   { href: '/maintenance', label: 'Maintenance', iconName: 'Wrench' },
   { href: '/tasks', label: 'Tasks', iconName: 'ListChecks' },
@@ -86,7 +86,7 @@ const navItems = [
       { href: '/reports/operational', label: 'Operational Reports' },
       { href: '/reports/maintenance', label: 'Maintenance Reports' },
       { href: '/reports/tenant-leasing', label: 'Tenant & Leasing' },
-      { href: '/reports/association', label: 'Association Reports' },
+      { href: '/reports/contacts', label: 'Contact Reports' },
       { href: '/reports/custom-builder', label: 'Custom Report Builder' },
     ]
   },
@@ -167,12 +167,15 @@ export default function RootLayout({
              <NavigationMenuClient navItems={navItems} />
             </SidebarContent>
             <SidebarFooter className="p-4">
-              <Link href="/upgrade" passHref legacyBehavior>
+              <Link href="/upgrade" passHref>
                 <SidebarMenuButton
                   className="justify-start"
+                  asChild
                 >
-                  <Rocket className="h-5 w-5" />
-                  <span>Upgrade</span>
+                  <>
+                    <Rocket className="h-5 w-5" />
+                    <span>Upgrade</span>
+                  </>
                 </SidebarMenuButton>
               </Link>
             </SidebarFooter>
@@ -219,7 +222,7 @@ export default function RootLayout({
                   </Tooltip>
                 </TooltipProvider>
                 
-                <ReviewFormDialog /> {/* Replaced Star button with ReviewFormDialog */}
+                <ReviewFormDialog /> 
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

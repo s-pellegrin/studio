@@ -10,7 +10,7 @@ export default function ReportsPage() {
     { title: "Operational Reports", description: "Vacancy, occupancy, lease expirations.", href: "/reports/operational", icon: TrendingUp },
     { title: "Maintenance Reports", description: "History, costs, work order status.", href: "/reports/maintenance", icon: Wrench },
     { title: "Tenant & Leasing Reports", description: "Demographics, leasing funnel, retention.", href: "/reports/tenant-leasing", icon: Users },
-    { title: "Association Reports", description: "Member lists, dues, budgets, violations.", href: "/reports/association", icon: PieChartIcon },
+    { title: "Contact Reports", description: "Contact lists, vendor details, communication logs.", href: "/reports/contacts", icon: PieChartIcon },
     { title: "Custom Report Builder", description: "Create and save tailored reports.", href: "/reports/custom-builder", icon: FileText },
   ];
 

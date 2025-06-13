@@ -38,7 +38,7 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
-import { format } from 'date-fns'; // Added import
+import { format } from 'date-fns'; 
 
 import type { Tenant } from './tenants/data';
 import { initialTenants } from './tenants/data';
@@ -46,8 +46,8 @@ import type { MaintenanceRequest } from './maintenance/data';
 import { initialMaintenanceRequests } from './maintenance/data';
 import type { Task } from './tasks/data';
 import { initialTasks } from './tasks/data';
-import type { VendorPolicy } from './associations/data';
-import { initialVendorPolicies } from './associations/data';
+import type { VendorPolicy } from './contacts/data'; // Updated import path
+import { initialVendorPolicies } from './contacts/data'; // Updated import path
 import { useState, useEffect } from 'react';
 
 
@@ -109,18 +109,18 @@ export default function DashboardPage() {
       setGreeting('Good evening');
     }
     const storedUsername = localStorage.getItem('dashboardUsername');
-    setUserName(storedUsername || 'User'); // Default to 'User' if not found
+    setUserName(storedUsername || 'User'); 
   }, []);
 
   // Outstanding Balances
   const outstandingBalancesData: BalanceItem[] = initialTenants
     .filter(t => t.rentStatus === 'Overdue')
-    .slice(0, 5) // Show top 5
+    .slice(0, 5) 
     .map(t => ({
       id: t.id,
       name: t.name,
       propertyUnit: `${t.property} - ${t.unit}`,
-      amount: t.rentAmount || 275, // Using rentAmount if available, otherwise placeholder
+      amount: t.rentAmount || 275, 
       currency: 'HK$'
     }));
   const totalOutstandingBalance = initialTenants
@@ -131,7 +131,7 @@ export default function DashboardPage() {
   // Tasks (Incoming Maintenance Requests)
   const incomingRequestsData: DashboardTaskItem[] = initialMaintenanceRequests
     .filter(m => m.status === 'New' || m.status === 'In Progress')
-    .slice(0, 3) // Show top 3
+    .slice(0, 3) 
     .map(m => {
       const reported = new Date(m.reportedDate);
       const today = new Date();
@@ -153,19 +153,19 @@ export default function DashboardPage() {
     { name: 'Insured', value: insuredTenants, fill: 'hsl(var(--primary))' },
     { name: 'Uninsured', value: uninsuredTenants, fill: 'hsl(var(--destructive))' },
   ];
-  // Mock for MSI/Third party breakdown for legend
-  const msiPolicyCount = initialTenants.filter(t => t.insuranceStatus === 'Active').length; // Simplified for now
+  
+  const msiPolicyCount = initialTenants.filter(t => t.insuranceStatus === 'Active').length; 
   const thirdPartyPolicyCount = 0;
 
 
   // Overdue Tasks
   const overdueTasksData: OverdueTaskItem[] = initialTasks
     .filter(t => isPastDate(t.dueDate) && t.status !== 'Completed')
-    .slice(0, 2) // Show top 2
+    .slice(0, 2) 
     .map(t => ({
       id: t.id,
       title: t.description,
-      dueDate: format(new Date(t.dueDate), 'MM/dd/yyyy'), // Consistent date formatting
+      dueDate: format(new Date(t.dueDate), 'MM/dd/yyyy'), 
       propertyUnit: t.relatedTo || 'N/A'
     }));
   const totalOverdueTasks = initialTasks.filter(t => isPastDate(t.dueDate) && t.status !== 'Completed').length;
@@ -178,7 +178,7 @@ export default function DashboardPage() {
   
   const expiringLeasesChartData: ExpiringLeaseData[] = [
     { name: 'Not started', value: expiringLeases30Days > 0 ? Math.max(1, Math.floor(expiringLeases30Days * 0.6)) : 0 }, 
-    { name: 'Offers', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.2)) : 0 }, // Mock distribution
+    { name: 'Offers', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.2)) : 0 }, 
     { name: 'Renewals', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.1)) : 0 },
     { name: 'Move-outs', value: expiringLeases30Days > 0 ? Math.max(0, Math.floor(expiringLeases30Days * 0.1)) : 0 },
   ];
@@ -187,8 +187,8 @@ export default function DashboardPage() {
 
   // Expiring Renters Insurance
   const lapsedInsuranceCount = initialTenants.filter(t => t.insuranceStatus === 'Lapsed').length;
-  // Placeholder counts for date ranges as we don't have insurance expiry dates
-  const expiringInsurance30Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 30)).length; // Mock: using lease end date for now
+  
+  const expiringInsurance30Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 30)).length; 
   const expiringInsurance60Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 60) && !isWithinNextNDays(t.leaseEndDate, 30)).length;
   const expiringInsurance90Days = initialTenants.filter(t => t.insuranceStatus === 'Active' && isWithinNextNDays(t.leaseEndDate, 90) && !isWithinNextNDays(t.leaseEndDate, 60)).length;
 
@@ -397,9 +397,9 @@ export default function DashboardPage() {
           <CardContent>
              <Tabs defaultValue="0-30" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
-                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0 - 30 days ({expiringLeases30Days})</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31 - 60 days ({expiringLeases60Days})</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61 - 90 days ({expiringLeases90Days})</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0-30d ({expiringLeases30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31-60d ({expiringLeases60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61-90d ({expiringLeases90Days})</TabsTrigger>
                 <TabsTrigger value="all" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">All ({totalExpiringLeases})</TabsTrigger>
               </TabsList>
               <TabsContent value="0-30">
@@ -457,9 +457,9 @@ export default function DashboardPage() {
              <Tabs defaultValue="expired" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4">
                 <TabsTrigger value="expired" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">Expired ({lapsedInsuranceCount})</TabsTrigger>
-                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0 - 30 days ({expiringInsurance30Days})</TabsTrigger>
-                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31 - 60 days ({expiringInsurance60Days})</TabsTrigger>
-                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61 - 90 days ({expiringInsurance90Days})</TabsTrigger>
+                <TabsTrigger value="0-30" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">0-30d ({expiringInsurance30Days})</TabsTrigger>
+                <TabsTrigger value="31-60" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">31-60d ({expiringInsurance60Days})</TabsTrigger>
+                <TabsTrigger value="61-90" className="px-0.5 py-1 text-[8px] sm:text-[10px] leading-tight">61-90d ({expiringInsurance90Days})</TabsTrigger>
               </TabsList>
               <TabsContent value="expired">
                 {lapsedInsuranceCount > 0 ? (
